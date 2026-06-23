@@ -1,0 +1,53 @@
+﻿\FloatBarrier
+\section{Supervis\~ao Espacial em Imagens Celulares}
+
+\subsection{Do contorno completo ao ponto}
+
+M\'ascaras de inst\^ancia permitem avaliar fronteiras e separar objetos
+adjacentes, mas exigem anota\c{c}\~ao detalhada. HoVer-Net, por exemplo, aprende
+segmenta\c{c}\~ao e classifica\c{c}\~ao nuclear em histologia a partir de contornos
+de inst\^ancia \cite{graham2019hovernet}; Cellpose tamb\'em aborda segmenta\c{c}\~ao
+celular generalista com supervis\~ao de m\'ascaras \cite{stringer2021cellpose}.
+Esses m\'etodos resolvem um problema espacial mais rico que o deste artigo, mas
+dependem de um tipo de ground truth ausente na CRIC.
+
+Pontos reduzem custo de anota\c{c}\~ao e identificam inst\^ancias sem descrever
+suas fronteiras. Ribera et al. estudaram localiza\c{c}\~ao de objetos sem bounding
+boxes \cite{ribera2019locating}, e Cheng et al. investigaram segmenta\c{c}\~ao de
+inst\^ancias supervisionada por pontos \cite{cheng2022pointly}. Em imagens
+biom\'edicas, Chen et al. propuseram segmenta\c{c}\~ao histopatol\'ogica fracamente
+supervisionada com pontos esparsos \cite{chen2021sparsepoints}; Xia et al.
+exploraram pontos e coloriza\c{c}\~ao para segmenta\c{c}\~ao nuclear
+\cite{xia2023colorization}. Em comum, esses estudos tratam o ponto como supervis\~ao incompleta, n\~ao como
+caixa impl\'icita. Uma abordagem alternativa \'e aprender a extens\~ao diretamente
+por regress\~ao, como faz o P2BNet \cite{chen2023p2bnet}. O presente trabalho,
+ao contr\'ario, torna \emph{expl\'icita} a geometria fixa e mede seu efeito ---
+uma escolha que m\'etodos como o P2BNet ocultam na otimiza\c{c}\~ao.
+
+Neste artigo, pseudo-caixas s\~ao adotadas por pragmatismo: permitem usar um
+detector convencional mantendo sa\'ida por inst\^ancia. O IoU mede concord\^ancia
+com um alvo sint\'etico, n\~ao com a fronteira citol\'ogica; por isso, o tamanho
+do alvo \'e submetido a abla\c{c}\~ao e a contagem avaliada em paralelo.
+
+\subsection{Detec\c{c}\~ao em citologia cervical}
+
+Revis\~oes da \'area descrevem resultados elevados em classifica\c{c}\~ao celular,
+mas tamb\'em heterogeneidade de bases, prepara\c{c}\~ao, classes e protocolos de
+avalia\c{c}\~ao \cite{jiang2023systematic,fang2024systematic}. Essa heterogeneidade
+impede interpretar m\'etricas de tarefas diferentes como ranking direto.
+Classificar um recorte centrado, localizar uma c\'elula no campo e segmentar
+n\'ucleo/citoplasma n\~ao s\~ao problemas intercambi\'aveis.
+
+O CerviCell-detector avaliou detectores de objetos em imagens de Papanicolau,
+incluindo experimentos na CRIC, com formula\c{c}\~oes bin\'aria e Bethesda
+\cite{kalbhor2023cervicell}. O presente estudo remove a decis\~ao diagn\'ostica do
+alvo e pergunta se todas as inst\^ancias pontuais podem ser localizadas e
+contadas. Essa escolha produz uma contribui\c{c}\~ao complementar: um detector de
+classe \'unica pode anteceder um classificador, mas seu desempenho deve primeiro
+ser entendido como problema de cobertura espacial.
+
+AP em diferentes limiares de IoU \'e adotada para medir rigor de localiza\c{c}\~ao,
+seguindo a tradi\c{c}\~ao de benchmarks como COCO \cite{lin2014coco}. Entretanto,
+como o alvo \'e sint\'etico, AP n\~ao \'e analisada isoladamente. F1 em um ponto
+operacional e erros de contagem completam a avalia\c{c}\~ao, enquanto o conjunto
+de teste permanece oculto durante a sele\c{c}\~ao.

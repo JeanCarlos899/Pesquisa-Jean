@@ -1,0 +1,7 @@
+Item,Valor
+Tarefa,"Deteccao de todas as celulas, classe unica cell"
+Anotacao original,Ponto nuclear x/y por celula
+Pseudo-bounding box principal,144 x 144 px
+Tamanhos para ablacao,"48, 64, 72, 96, 112, 128, 144, 160, 176, 192"
+Split,"Por imagem, sem compartilhar uma imagem entre treino/validacao/teste"
+Base,"CRIC Cervix, 400 imagens e 11534 celulas anotadas"

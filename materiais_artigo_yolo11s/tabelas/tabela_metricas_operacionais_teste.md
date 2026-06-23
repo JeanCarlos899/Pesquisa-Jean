@@ -1,0 +1,3 @@
+| particao | iou | conf | tp | fp | fn | Precisao | Revocacao | F1 | MAE contagem | RMSE contagem | Vies contagem | gt_total | pred_total | imagens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| test | 0.5 | 0.35 | 975 | 257 | 174 | 0.7913961038961039 | 0.8485639686684073 | 0.8189836203275935 | 4.675 | 7.216300991505274 | 2.075 | 1149 | 1232 | 40 |

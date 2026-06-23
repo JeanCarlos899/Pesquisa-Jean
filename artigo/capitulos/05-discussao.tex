@@ -1,0 +1,111 @@
+﻿\FloatBarrier
+\section{Discuss\~ao}
+
+\subsection{O que a pseudo-caixa representa}
+
+O experimento n\~ao recupera fronteiras celulares; ele aprende uma vizinhan\c{c}a
+quadrada ao redor do n\'ucleo. Essa distin\c{c}\~ao muda o significado das
+m\'etricas. AP75 alta indica concord\^ancia com a regra da
+Equa\c{c}\~ao~\ref{eq:pseudobox}, n\~ao segmenta\c{c}\~ao precisa de n\'ucleo ou
+citoplasma. M\'etodos com m\'ascaras, como HoVer-Net e Cellpose, respondem a uma
+pergunta espacial mais detalhada \cite{graham2019hovernet,stringer2021cellpose}.
+A objec\c{c}\~ao de que o IoU contra um alvo sint\'etico seria igualmente
+artificial \'e respondida pela avalia\c{c}\~ao por dist\^ancia: como o F1 por ponto
+converge ao F1 por IoU, a m\'etrica n\~ao depende criticamente da geometria
+adotada, e o n\'ucleo anotado --- \'unico ground truth da CRIC --- \'e de fato
+recuperado.
+
+Ainda assim, pontos cont\^em informa\c{c}\~ao de inst\^ancia que r\'otulos globais
+n\~ao possuem. A literatura de supervis\~ao pontual mostra que essa informa\c{c}\~ao
+pode orientar localiza\c{c}\~ao e segmenta\c{c}\~ao com menor custo de anota\c{c}\~ao
+\cite{ribera2019locating,chen2021sparsepoints,xia2023colorization}. O resultado
+da RQ1 acrescenta uma observa\c{c}\~ao pr\'atica: quando pontos s\~ao convertidos em
+caixas, a geometria escolhida deve ser reportada e testada. Caso contr\'ario, uma
+parte relevante do desempenho permanece escondida na prepara\c{c}\~ao do dado.
+
+O plat\^o de 96--192 pixels \'e mais informativo que a escolha isolada de 144.
+Ele mostra que diversas extens\~oes produzem F1 parecido, mas n\~ao o mesmo
+compromisso de precis\~ao, revoca\c{c}\~ao e contagem. A queda em 160 pixels alerta
+contra uma leitura determinista da curva: cada ponto corresponde a um treino e
+inclui variabilidade de otimiza\c{c}\~ao. Repeti\c{c}\~oes por semente seriam
+necess\'arias para separar efeito geom\'etrico de varia\c{c}\~ao estoc\'astica.
+
+\subsection{Capacidade e custo computacional}
+
+YOLO11s foi o melhor compromisso observado, mas sua vantagem sobre YOLO11n foi
+pequena. Sem repeti\c{c}\~oes independentes, n\~ao h\'a base estat\'istica para
+afirmar que o S \'e intrinsecamente superior. A conclus\~ao suportada \'e mais
+restrita: sob os pesos, parti\c{c}\~ao e or\c{c}amento executados, S gerou o melhor
+ponto operacional.
+
+O M ilustra por que mAP de treinamento n\~ao deve ser o \'unico crit\'erio. Sua
+revoca\c{c}\~ao foi a maior, mas o aumento de falsos positivos deteriorou contagem
+e F1. Esse comportamento importa em campos densos: detectar mais candidatos
+pode ser desej\'avel em uma etapa de busca, mas transfere custo para supress\~ao
+de duplicidades ou revis\~ao posterior. O artigo, portanto, n\~ao trata escala do
+modelo como proxy autom\'atica de qualidade.
+
+\subsection{Escopo da compara\c{c}\~ao com a literatura}
+
+Os valores de AP deste artigo n\~ao constituem um ranking direto contra HoVer-Net
+ou Cellpose: esses m\'etodos estimam m\'ascaras, foram avaliados em outros
+conjuntos e respondem a uma defini\c{c}\~ao de alvo distinta
+\cite{graham2019hovernet,stringer2021cellpose}. Tampouco se deve comparar apenas
+o n\'umero final com trabalhos de classifica\c{c}\~ao Bethesda. O
+CerviCell-detector, por exemplo, investiga detec\c{c}\~ao de c\'elulas cancerosas,
+enquanto aqui toda coordenada celular pertence a uma classe bin\'aria
+\cite{kalbhor2023cervicell}. M\'etrica, unidade de an\'alise, parti\c{c}\~ao e
+sem\^antica do r\'otulo precisam coincidir para sustentar superioridade num\'erica;
+as revis\~oes da \'area mostram justamente grande heterogeneidade nesses elementos
+\cite{jiang2023systematic,fang2024systematic}.
+
+A contribui\c{c}\~ao compar\'avel \'a literatura de supervis\~ao fraca \'e outra:
+quantificar o efeito de transformar um ponto em uma regi\~ao de treinamento e
+mostrar como essa escolha repercute simultaneamente em localiza\c{c}\~ao e
+contagem. Ribera et al. aprendem localiza\c{c}\~ao sem caixas, enquanto Chen et
+al. e Xia et al. exploram pontos para segmenta\c{c}\~ao
+\cite{ribera2019locating,chen2021sparsepoints,xia2023colorization}. Este estudo
+n\~ao substitui essas formula\c{c}\~oes; fornece um protocolo simples e audit\'avel
+para o cen\'ario em que um detector de caixas \'e treinado a partir de coordenadas.
+Assim, a novidade reivindicada \'e metodol\'ogica e experimental, n\~ao uma alegada
+superioridade universal do YOLO11s.
+
+\subsection{Contagem e fontes de erro}
+
+A correla\c{c}\~ao 0,9434 confirma que o modelo acompanha a varia\c{c}\~ao de
+carga celular entre imagens; o MAE de 4,68 e o vi\'es de 2,08 revelam, por\'em,
+erro residual e tend\^encia de supercontagem. Para refer\^encia de ordem de grandeza, Xie et al.\ aplicaram redes de regress\~ao
+totalmente convolucionais \`a contagem celular em microscopia e obtiveram MAE
+competitivo em diferentes densidades \cite{xie2018fcrn}. O valor obtido aqui
+(MAE~4,68) situa-se na mesma casa de magnitude, embora a compara\c{c}\~ao seja
+apenas indicativa: os conjuntos de dados, a supervis\~ao e a formula\c{c}\~ao
+diferem. Em termos absolutos, a faixa mais
+densa concentrou o maior erro (MAE~6,31): pequenas taxas de duplicidade ou
+omiss\~ao acumulam-se quando o campo cont\'em dezenas de c\'elulas.
+
+H\'a pelo menos tr\^es explica\c{c}\~oes, n\~ao separadas por este experimento:
+duplicidade em grupos sobrepostos, quando o IoU entre pseudo-caixas adjacentes
+fica abaixo do limiar de supress\~ao e dois hits sobrevivem para o mesmo n\'ucleo;
+estruturas n\~ao celulares confundidas com o alvo; e c\'elulas vis\'iveis sem ponto
+correspondente na anota\c{c}\~ao. Distinguir essas causas exige revis\~ao cega de
+falsos positivos por especialista. O colapso isolado em 160 pixels \'e de natureza
+distinta: ali o detector saturou o teto de detec\c{c}\~oes por imagem, um efeito
+de instabilidade de treino que n\~ao se repete nas demais escalas e n\~ao deve ser
+confundido com a supercontagem residual do modelo final.
+
+\subsection{Limita\c{c}\~oes e perspectivas}
+
+Quatro limita\c{c}\~oes delimitam a interpreta\c{c}\~ao. \emph{Constru\c{c}\~ao:}
+m\'etricas de IoU descrevem consist\^encia com um alvo sint\'etico, n\~ao com a
+fronteira citol\'ogica. \emph{Interna:} cada configura\c{c}\~ao foi treinada uma
+vez; repeti\c{c}\~oes por semente seriam necess\'arias para separar efeito de $s$
+de ru\'ido de otimiza\c{c}\~ao. \emph{Externa:} avalia\c{c}\~ao em base \'unica,
+separa\c{c}\~ao por imagem (n\~ao por paciente), sem teste em outro laborat\'orio
+ou equipamento. \emph{Conclus\~ao:} os intervalos de bootstrap quantificam
+varia\c{c}\~ao entre imagens, mas n\~ao incerteza de treinamento; diferen\c{c}as
+no plat\^o de F1 n\~ao devem ser generalizadas sem repeti\c{c}\~oes.
+
+A extens\~ao imediata \'e comparar pseudo-caixas a formulac\~oes que aprendem
+extens\~ao a partir dos pontos \cite{chen2023p2bnet}, repetir o sweep com
+m\'ultiplas sementes e anotar uma amostra com contornos manuais para calibrar a
+avalia\c{c}\~ao atual.

@@ -1,0 +1,27 @@
+﻿\FloatBarrier
+\section{Conclus\~ao}
+
+Este estudo tratou a convers\~ao de pontos nucleares em caixas como vari\'avel
+cient\'ifica. Para a RQ1, observou-se um plat\^o de F1 entre 96 e 192 pixels, com
+compromissos distintos de AP50, revoca\c{c}\~ao e contagem. Para a RQ2, YOLO11s
+foi o melhor ponto operacional, embora a vantagem sobre YOLO11n tenha sido
+pequena e YOLO11m tenha apresentado maior revoca\c{c}\~ao. Para a RQ3, o modelo
+selecionado obteve AP50 0,8723, F1 0,8190 e MAE 4,68 no teste retido; o erro
+absoluto aumentou em imagens mais densas.
+
+A conclus\~ao principal n\~ao \'e que 144 pixels ou YOLO11s sejam universais. O
+resultado relevante \'e que a defini\c{c}\~ao espacial criada a partir de pontos
+altera de forma mensur\'avel detec\c{c}\~ao e contagem e, portanto, precisa fazer
+parte do protocolo reportado. O pipeline produzido oferece uma refer\^encia
+reprodut\'ivel para esse tipo de auditoria na CRIC. Sua extens\~ao natural \'e
+substituir a geometria fixa por supervis\~ao diretamente pontual e comparar com
+uma amostra de contornos anotados.
+
+\section*{Artefatos de Reprodu\c{c}\~ao}
+
+Os CSVs usados pelos gr\'aficos, configura\c{c}\~oes de treinamento, checkpoints
+selecionados e rotinas de avalia\c{c}\~ao est\~ao dispon\'iveis no reposit\'orio
+p\'ublico do projeto. O reposit\'orio inclui as parti\c{c}\~oes por imagem (semente
+42), os metadados das pseudo-caixas para cada valor de $s$ e os arquivos de
+predi\c{c}\~ao do conjunto de teste, permitindo reproduzir as m\'etricas reportadas
+sem re-treinamento.

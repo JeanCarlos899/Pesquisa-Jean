@@ -1,0 +1,237 @@
+﻿\FloatBarrier
+\section{Resultados}
+
+\subsection{RQ1: o alvo altera o resultado?}
+
+A Figura~\ref{fig:sweep-pgf} mostra que a resposta \'e n\~ao monot\^onica. F1 e
+AP50 aumentaram das menores caixas at\'e uma regi\~ao de estabilidade, mas o
+tamanho 160 apresentou queda acentuada e supercontagem. O maior F1 foi 0,8253
+em 192 pixels. O menor MAE (3,65) e o maior AP50 (0,8776) ocorreram em 176
+pixels. Em 144 pixels, F1 foi 0,8228, AP50 0,8748 e MAE 4,40.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+ group style={group size=2 by 1,horizontal sep=1.25cm},
+ width=.46\textwidth,height=5.1cm,
+ xlabel={Lado da pseudo-caixa (px)},
+ xmin=40,xmax=200,xtick={48,72,96,120,144,168,192},
+ tick label style={font=\scriptsize},label style={font=\small},
+ grid=major,grid style={black!10},axis line style={black!65}
+]
+\nextgroupplot[ylabel={Desempenho},ymin=.62,ymax=.96,legend style={font=\scriptsize,draw=none,at={(.5,-.34)},anchor=north,legend columns=3}]
+\addplot[black,thick,mark=*] table[x=box_size_px,y=f1_val_iou50,col sep=comma]{dados/bbox_sweep.csv};
+\addlegendentry{F1@0,50}
+\addplot[black!50,thick,dashed,mark=square*] table[x=box_size_px,y=ap50_val,col sep=comma]{dados/bbox_sweep.csv};
+\addlegendentry{AP50}
+\addplot[black!30,thick,densely dotted,mark=triangle*] table[x=box_size_px,y=recall_val_iou50,col sep=comma]{dados/bbox_sweep.csv};
+\addlegendentry{Revoca\c{c}\~ao}
+\addplot[only marks,mark=*,mark size=3pt] coordinates {(144,0.8228176)};
+\nextgroupplot[ylabel={MAE de contagem},ymin=0,ymax=29]
+\addplot[black!55,thick,mark=triangle*] table[x=box_size_px,y=mae_contagem_val,col sep=comma]{dados/bbox_sweep.csv};
+\addplot[only marks,mark=triangle*,mark size=3pt] coordinates {(144,4.4)};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Sensibilidade ao tamanho do alvo na valida\c{c}\~ao. O marcador maior
+indica a configura\c{c}\~ao de 144 pixels usada na compara\c{c}\~ao de capacidade.}
+\label{fig:sweep-pgf}
+\end{figure}
+
+Os valores entre 96 e 192 pixels, exceto 160, formam um plat\^o estreito de F1
+(0,8157--0,8253). Assim, os dados n\~ao sustentam um \'unico tamanho universal.
+O ponto de 144 pixels foi mantido por combinar AP50 pr\'oxima do m\'aximo
+(0,8748 vs.\ 0,8776 em 176), revoca\c{c}\~ao superior a 176 e 192
+(0,8285 vs.\ 0,7885 e 0,8059) e posi\c{c}\~ao intermedi\'aria no plat\^o. A maior
+revoca\c{c}\~ao importa quando as c\'elulas perdidas pelo detector representam
+potenciais falsos negativos diagn\'osticos; pagar um custo de MAE levemente
+maior (4,40 vs.\ 3,65 em 176) para manter cobertura foi o crit\'erio adotado.
+A instabilidade em 160 pixels impede interpretar a tend\^encia como simples
+benef\'icio de caixas maiores. Naquele ponto, o detector saturou o teto de
+detec\c{c}\~oes (300 por imagem em todas as 40 imagens de valida\c{c}\~ao), com
+revoca\c{c}\~ao 0,955 e precis\~ao 0,496. Como caixas \emph{maiores} (176 e 192
+pixels) n\~ao reproduzem esse colapso, o efeito reflete a vari\^ancia de um treino
+isolado, n\~ao uma consequ\^encia geom\'etrica do tamanho do alvo. De fato, a
+mAP50 nativa desse modelo permaneceu saud\'avel (0,883), indicando que o ranking
+das detec\c{c}\~oes foi preservado e que o colapso se restringiu \`a calibra\c{c}\~ao
+do ponto operacional.
+
+\FloatBarrier
+\subsection{RQ2: maior capacidade melhora a tarefa?}
+
+YOLO11s apresentou o maior F1 (0,8363), AP50 (0,8848) e o menor MAE (4,68) na
+valida\c{c}\~ao. YOLO11n ficou pr\'oximo, com F1 0,8231 e MAE 4,83. YOLO11m
+atingiu a maior revoca\c{c}\~ao (0,8921), mas sua precis\~ao de 0,7158 elevou o
+MAE para 8,13 e reduziu F1 para 0,7943. A Figura~\ref{fig:modelos-pgf} mostra
+que escala de par\^ametros e desempenho operacional n\~ao cresceram juntos.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+ width=.76\textwidth,height=5.2cm,
+ ybar,bar width=7pt,
+ symbolic x coords={YOLO11n,YOLO11s,YOLO11m},xtick=data,
+ ymin=.68,ymax=.92,ylabel={M\'etrica na valida\c{c}\~ao},
+ tick label style={font=\small},label style={font=\small},
+ legend style={font=\scriptsize,draw=none,at={(.5,-.22)},anchor=north,legend columns=3},
+ ymajorgrids=true,grid style={black!10},axis line style={black!65}
+]
+\addplot[fill=black!75,draw=black!75] table[x=modelo,y=f1_val_iou50,col sep=comma]{dados/modelos.csv};
+\addlegendentry{F1}
+\addplot[fill=black!45,draw=black!55] table[x=modelo,y=revocacao_val_iou50,col sep=comma]{dados/modelos.csv};
+\addlegendentry{Revoca\c{c}\~ao}
+\addplot[fill=black!15,draw=black!45] table[x=modelo,y=ap50_val_custom,col sep=comma]{dados/modelos.csv};
+\addlegendentry{AP50}
+\end{axis}
+\end{tikzpicture}
+\caption{Compara\c{c}\~ao das escalas YOLO11 com pseudo-caixas de 144 pixels.}
+\label{fig:modelos-pgf}
+\end{figure}
+
+O ganho de YOLO11s sobre YOLO11n foi de 0,0132 em F1 e 0,0075 em AP50. Essa
+diferen\c{c}a \'e pequena e n\~ao possui intervalo de confian\c{c}a entre treinos;
+portanto, suporta a escolha operacional do S neste experimento, mas n\~ao uma
+afirma\c{c}\~ao geral de superioridade arquitetural. O M foi descartado porque
+o aumento de revoca\c{c}\~ao n\~ao compensou falsos positivos e erro de contagem.
+
+\FloatBarrier
+\subsection{Sele\c{c}\~ao do ponto operacional}
+
+A confian\c{c}a controla uma troca relevante para contagem. Na valida\c{c}\~ao,
+limiares baixos preservaram quase todas as c\'elulas, mas geraram muitas
+detec\c{c}\~oes excedentes: em 0,10, a revoca\c{c}\~ao foi 0,9661 e a precis\~ao
+0,5187, com MAE 24,78. Em 0,50, a precis\~ao subiu para 0,8853, mas a revoca\c{c}\~ao
+caiu para 0,6919 e o vi\'es tornou-se negativo ($-6,28$ c\'elulas por imagem).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+ width=.72\textwidth,height=5.4cm,
+ xlabel={Limiar de confian\c{c}a},ylabel={F1 na valida\c{c}\~ao},
+ xmin=.02,xmax=.52,ymin=.40,ymax=.88,
+ xtick={.03,.10,.20,.25,.35,.50},
+ tick label style={font=\scriptsize},label style={font=\small},
+ legend style={font=\scriptsize,draw=none,at={(.5,-.40)},anchor=north,legend columns=3},
+ grid=major,grid style={black!10},axis line style={black!65}
+]
+\addplot[black!75,thick,mark=*] table[x=conf,y=f1_iou30,col sep=comma]{dados/f1_limiares.csv};
+\addlegendentry{IoU 0,30}
+\addplot[black!45,thick,dashed,mark=square*] table[x=conf,y=f1_iou50,col sep=comma]{dados/f1_limiares.csv};
+\addlegendentry{IoU 0,50}
+\addplot[black!20,thick,dotted,mark=triangle*] table[x=conf,y=f1_iou75,col sep=comma]{dados/f1_limiares.csv};
+\addlegendentry{IoU 0,75}
+\addplot[only marks,mark=*,mark size=3.2pt] coordinates {(.35,.8363034)};
+\end{axis}
+\end{tikzpicture}
+\caption{Curvas de F1 usadas para selecionar a confian\c{c}a. O marcador maior
+identifica 0,35, escolhido exclusivamente na valida\c{c}\~ao em IoU 0,50.}
+\label{fig:limiar-pgf}
+\end{figure}
+
+O limiar 0,35 maximizou F1@0,50 (0,8363), com precis\~ao 0,7983, revoca\c{c}\~ao
+0,8782, MAE 4,68 e vi\'es 2,88. A proximidade das curvas em IoU 0,30 e 0,50
+indica que, nesse intervalo, a maioria das associa\c{c}\~oes aceitas em 0,30
+tamb\'em satisfaz 0,50. A separa\c{c}\~ao em IoU 0,75 evidencia a penaliza\c{c}\~ao
+adicional por desalinhamento fino com a pseudo-caixa. O teste recebeu 0,35 sem
+novo ajuste; portanto, seu resultado mede transfer\^encia do ponto operacional,
+n\~ao o melhor limiar retrospectivo para aquela parti\c{c}\~ao.
+
+\FloatBarrier
+\subsection{RQ3: o resultado se mant\'em no teste?}
+
+Com YOLO11s, lado 144 e confian\c{c}a 0,35, o teste produziu 975 verdadeiros
+positivos, 257 falsos positivos e 174 falsos negativos. A
+Tabela~\ref{tab:teste-unificado} re\'une todas as medidas, cada uma com intervalo
+de 95\% obtido por bootstrap de imagens.
+
+\begin{table}[htbp]
+\centering
+\caption{Resultado no teste retido. IC95\% por bootstrap de imagens.}
+\label{tab:teste-unificado}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrl@{\hspace{8mm}}lrl}
+\toprule
+M\'etrica & Valor & IC95\% & M\'etrica & Valor & IC95\% \\
+\midrule
+Precis\~ao & 0,7914 & [0,746; 0,833] & AP30 & 0,8843 & [0,858; 0,913] \\
+Revoca\c{c}\~ao & 0,8486 & [0,822; 0,877] & AP50 & 0,8723 & [0,843; 0,904] \\
+F1 & 0,8190 & [0,796; 0,842] & AP75 & 0,7515 & [0,695; 0,811] \\
+MAE & 4,675 & [3,150; 6,425] & RMSE & 7,216 & [4,560; 9,850] \\
+Vi\'es & 2,075 & [0,050; 4,126] & Correla\c{c}\~ao & 0,9434 & [0,874; 0,979] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O F1 de teste ficou 0,0173 abaixo da valida\c{c}\~ao, enquanto AP50 caiu 0,0125.
+Essas diferen\c{c}as s\~ao compat\'iveis com transfer\^encia moderada entre duas
+amostras de 40 imagens, sem evid\^encia de colapso. O vi\'es positivo indica 2,08
+detec\c{c}\~oes excedentes por imagem em m\'edia.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+ width=.66\textwidth,height=6.0cm,
+ xlabel={C\'elulas anotadas por imagem},ylabel={C\'elulas detectadas por imagem},
+ xmin=0,xmax=110,ymin=0,ymax=110,
+ tick label style={font=\scriptsize},label style={font=\small},
+ grid=major,grid style={black!10},axis line style={black!65}
+]
+\addplot[only marks,mark=*,mark size=1.7pt,black!60] table[x=gt_count,y=pred_count,col sep=comma]{dados/contagem_teste.csv};
+\addplot[black,dashed,domain=0:110,samples=2]{x};
+\end{axis}
+\end{tikzpicture}
+\caption{Concord\^ancia de contagem no teste; a linha tracejada representa
+$p_j=g_j$.}
+\label{fig:contagem-pgf}
+\end{figure}
+
+Na an\'alise explorat\'oria por tercis, o MAE foi 4,15 em imagens com 5--16
+c\'elulas, 3,69 entre 17--30 e 6,07 entre 32--94. A faixa mais densa concentrou
+maior erro absoluto, embora o F1 global permane\c{c}a 0,8190. A mediana global
+do erro foi 3 c\'elulas. Esses estratos foram definidos depois da avalia\c{c}\~ao
+principal e n\~ao devem ser interpretados como hip\'oteses confirmat\'orias.
+
+\FloatBarrier
+\subsection{Avalia\c{c}\~ao independente da pseudo-caixa}
+
+Para verificar se o desempenho reflete localiza\c{c}\~ao real e n\~ao apenas
+ader\^encia \`a caixa sint\'etica, o teste foi reavaliado pelo crit\'erio de
+dist\^ancia ao ponto. Como n\'ucleos vizinhos distam em mediana 72 pixels, um raio
+$R$ bem abaixo desse valor associa cada predi\c{c}\~ao ao n\'ucleo correto, n\~ao a
+um adjacente. A Figura~\ref{fig:dist-pgf} mostra o F1 crescendo e estabilizando:
+0,812 em $R=32$ pixels (metade do espa\c{c}amento t\'ipico) e 0,821 em 48.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+ width=.70\textwidth,height=4.4cm,
+ xlabel={Raio de toler\^ancia $R$ (px)},ylabel={M\'etrica no teste},
+ xmin=6,xmax=50,ymin=.45,ymax=.92,
+ xtick={8,16,24,32,40,48},
+ tick label style={font=\scriptsize},label style={font=\small},
+ legend style={font=\scriptsize,draw=none,at={(.5,-.30)},anchor=north,legend columns=3},
+ grid=major,grid style={black!10},axis line style={black!65}
+]
+\addplot[black,thick,mark=*] table[x=R,y=f1,col sep=comma]{dados/dist_eval.csv};
+\addlegendentry{F1}
+\addplot[black!50,thick,dashed,mark=square*] table[x=R,y=precision,col sep=comma]{dados/dist_eval.csv};
+\addlegendentry{Precis\~ao}
+\addplot[black!25,thick,dotted,mark=triangle*] table[x=R,y=recall,col sep=comma]{dados/dist_eval.csv};
+\addlegendentry{Revoca\c{c}\~ao}
+\addplot[gray,densely dashdotted,domain=6:50,samples=2]{0.819};
+\addlegendentry{F1 IoU 0,50}
+\end{axis}
+\end{tikzpicture}
+\caption{Avalia\c{c}\~ao por dist\^ancia ao ponto anotado, independente da geometria
+da pseudo-caixa. A linha horizontal \'e o F1 obtido por IoU 0,50.}
+\label{fig:dist-pgf}
+\end{figure}
+
+Esse intervalo (0,812--0,821) coincide com o F1 por IoU 0,50 (0,819): duas medidas
+de natureza distinta concordam, indicando que a qualidade reportada \'e
+localiza\c{c}\~ao efetiva dos n\'ucleos, n\~ao um artefato da conven\c{c}\~ao de alvo.

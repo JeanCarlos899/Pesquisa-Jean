@@ -1,0 +1,240 @@
+{
+  "operacional_teste": [
+    {
+      "particao": "test",
+      "iou": 0.5,
+      "conf": 0.35,
+      "tp": 975,
+      "fp": 257,
+      "fn": 174,
+      "precisao": 0.7913961038961039,
+      "revocacao": 0.8485639686684073,
+      "f1": 0.8189836203275935,
+      "mae_contagem": 4.675,
+      "rmse_contagem": 7.216300991505274,
+      "bias_contagem": 2.075,
+      "gt_total": 1149,
+      "pred_total": 1232,
+      "imagens": 40
+    }
+  ],
+  "map_test": [
+    {
+      "particao": "test",
+      "iou": 0.3,
+      "ap": 0.8842919420629359
+    },
+    {
+      "particao": "test",
+      "iou": 0.5,
+      "ap": 0.8723472460689747
+    },
+    {
+      "particao": "test",
+      "iou": 0.75,
+      "ap": 0.7514767412639859
+    }
+  ],
+  "ic95": [
+    {
+      "metrica": "precisao",
+      "valor": 0.7914,
+      "ic95": "0.791 [0.746-0.833]"
+    },
+    {
+      "metrica": "revocacao",
+      "valor": 0.8486,
+      "ic95": "0.849 [0.822-0.877]"
+    },
+    {
+      "metrica": "f1",
+      "valor": 0.819,
+      "ic95": "0.819 [0.796-0.842]"
+    },
+    {
+      "metrica": "mae_contagem",
+      "valor": 4.675,
+      "ic95": "4.675 [3.150-6.425]"
+    },
+    {
+      "metrica": "bias_contagem",
+      "valor": 2.075,
+      "ic95": "2.075 [0.050-4.126]"
+    }
+  ],
+  "limiar_operacional": {
+    "criterio": "maior F1 na validacao em IoU=0.50",
+    "conf": 0.35,
+    "iou": 0.5,
+    "metricas_validacao": {
+      "tp": 1009,
+      "fp": 255,
+      "fn": 140,
+      "precisao": 0.7982594936708861,
+      "revocacao": 0.8781549173194082,
+      "f1": 0.83630335681724,
+      "particao": "val",
+      "iou": 0.5,
+      "conf": 0.35,
+      "mae_contagem": 4.675,
+      "rmse_contagem": 7.058682596632321,
+      "bias_contagem": 2.875,
+      "corr_contagem": 0.968508625828389
+    }
+  },
+  "bbox_sweep": [
+    {
+      "box_size_px": 192,
+      "best_conf_val_iou50": 0.5,
+      "f1_val_iou50": 0.8253119429590018,
+      "precisao_val_iou50": 0.845662100456621,
+      "revocacao_val_iou50": 0.8059181897302001,
+      "mae_contagem_val": 4.05,
+      "ap50_val": 0.8686184207544345,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_192"
+    },
+    {
+      "box_size_px": 144,
+      "best_conf_val_iou50": 0.5,
+      "f1_val_iou50": 0.8228176318063958,
+      "precisao_val_iou50": 0.8171673819742489,
+      "revocacao_val_iou50": 0.8285465622280244,
+      "mae_contagem_val": 4.4,
+      "ap50_val": 0.8748276885018818,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_144"
+    },
+    {
+      "box_size_px": 112,
+      "best_conf_val_iou50": 0.5,
+      "f1_val_iou50": 0.8218119364534135,
+      "precisao_val_iou50": 0.8110169491525424,
+      "revocacao_val_iou50": 0.8328981723237598,
+      "mae_contagem_val": 4.175,
+      "ap50_val": 0.8686394798748701,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_112"
+    },
+    {
+      "box_size_px": 176,
+      "best_conf_val_iou50": 0.5,
+      "f1_val_iou50": 0.8206521739130436,
+      "precisao_val_iou50": 0.8555240793201133,
+      "revocacao_val_iou50": 0.7885117493472585,
+      "mae_contagem_val": 3.65,
+      "ap50_val": 0.8776088190369226,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_176"
+    },
+    {
+      "box_size_px": 128,
+      "best_conf_val_iou50": 0.35,
+      "f1_val_iou50": 0.8173424327579284,
+      "precisao_val_iou50": 0.7585692995529061,
+      "revocacao_val_iou50": 0.8859878154917319,
+      "mae_contagem_val": 6.275,
+      "ap50_val": 0.8746791872925118,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_128"
+    },
+    {
+      "box_size_px": 96,
+      "best_conf_val_iou50": 0.35,
+      "f1_val_iou50": 0.8156662409535973,
+      "precisao_val_iou50": 0.7983333333333333,
+      "revocacao_val_iou50": 0.8337684943429069,
+      "mae_contagem_val": 4.375,
+      "ap50_val": 0.8721610480938178,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_096"
+    },
+    {
+      "box_size_px": 72,
+      "best_conf_val_iou50": 0.35,
+      "f1_val_iou50": 0.8123980424143558,
+      "precisao_val_iou50": 0.7643898695318496,
+      "revocacao_val_iou50": 0.8668407310704961,
+      "mae_contagem_val": 6.35,
+      "ap50_val": 0.8487766801740158,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_072"
+    },
+    {
+      "box_size_px": 48,
+      "best_conf_val_iou50": 0.25,
+      "f1_val_iou50": 0.7584335013571152,
+      "precisao_val_iou50": 0.6839160839160839,
+      "revocacao_val_iou50": 0.8511749347258486,
+      "mae_contagem_val": 8.025,
+      "ap50_val": 0.7873832693141264,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_048"
+    },
+    {
+      "box_size_px": 64,
+      "best_conf_val_iou50": 0.2,
+      "f1_val_iou50": 0.7358241758241759,
+      "precisao_val_iou50": 0.7433392539964476,
+      "revocacao_val_iou50": 0.7284595300261096,
+      "mae_contagem_val": 7.425,
+      "ap50_val": 0.7563563610773895,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_064"
+    },
+    {
+      "box_size_px": 160,
+      "best_conf_val_iou50": 0.5,
+      "f1_val_iou50": 0.6531705864840727,
+      "precisao_val_iou50": 0.4963800904977375,
+      "revocacao_val_iou50": 0.9547432550043516,
+      "mae_contagem_val": 26.575,
+      "ap50_val": 0.8412200947559448,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\bbox_sweep\\box_160"
+    }
+  ],
+  "comparacao_modelos": [
+    {
+      "modelo": "YOLO11s",
+      "box_size_px": 144,
+      "best_conf_val_iou50": 0.35,
+      "f1_val_iou50": 0.83630335681724,
+      "precisao_val_iou50": 0.7982594936708861,
+      "revocacao_val_iou50": 0.8781549173194082,
+      "mae_contagem_val": 4.675,
+      "ap50_val_custom": 0.8847498694621,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\model_compare\\yolo11s",
+      "train_run": "yolo11s_832_box144_compare",
+      "train_best_epoch": 50,
+      "train_best_precision": 0.84126,
+      "train_best_recall": 0.85901,
+      "train_best_map50": 0.89973,
+      "train_best_map50_95": 0.58208
+    },
+    {
+      "modelo": "YOLO11n",
+      "box_size_px": 144,
+      "best_conf_val_iou50": 0.35,
+      "f1_val_iou50": 0.8230927835051547,
+      "precisao_val_iou50": 0.7821316614420063,
+      "revocacao_val_iou50": 0.8685813751087903,
+      "mae_contagem_val": 4.825,
+      "ap50_val_custom": 0.8772377546898286,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection",
+      "train_run": "yolo11n_832_box144_main",
+      "train_best_epoch": 72,
+      "train_best_precision": 0.81662,
+      "train_best_recall": 0.86816,
+      "train_best_map50": 0.88336,
+      "train_best_map50_95": 0.55364
+    },
+    {
+      "modelo": "YOLO11m",
+      "box_size_px": 144,
+      "best_conf_val_iou50": 0.35,
+      "f1_val_iou50": 0.7942657884540876,
+      "precisao_val_iou50": 0.715782122905028,
+      "revocacao_val_iou50": 0.8920800696257616,
+      "mae_contagem_val": 8.125,
+      "ap50_val_custom": 0.8626852150587158,
+      "output_dir": "C:\\Users\\jeanc\\OneDrive\\Área de Trabalho\\Pesquisa\\Pesquisa - Jean\\outputs_detection\\model_compare\\yolo11m",
+      "train_run": "yolo11m_864_box144_compare_b4",
+      "train_best_epoch": 45,
+      "train_best_precision": 0.82501,
+      "train_best_recall": 0.84073,
+      "train_best_map50": 0.8856,
+      "train_best_map50_95": 0.55936
+    }
+  ]
+}

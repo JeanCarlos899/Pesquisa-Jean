@@ -1,0 +1,4 @@
+particao,imagens,celulas,celulas_por_imagem_media
+train,320,9236,28.86
+val,40,1149,28.72
+test,40,1149,28.72

@@ -1,0 +1,8 @@
+| Categoria Bethesda | Celulas | Percentual |
+| --- | --- | --- |
+| NILM | 6779 | 58.77 |
+| HSIL | 1703 | 14.77 |
+| LSIL | 1360 | 11.79 |
+| ASC-H | 925 | 8.02 |
+| ASC-US | 606 | 5.25 |
+| SCC | 161 | 1.4 |

@@ -1,0 +1,20 @@
+{
+  "criterio": "maior F1 na validacao em IoU=0.50",
+  "conf": 0.35,
+  "iou": 0.5,
+  "metricas_validacao": {
+    "tp": 1009,
+    "fp": 255,
+    "fn": 140,
+    "precisao": 0.7982594936708861,
+    "revocacao": 0.8781549173194082,
+    "f1": 0.83630335681724,
+    "particao": "val",
+    "iou": 0.5,
+    "conf": 0.35,
+    "mae_contagem": 4.675,
+    "rmse_contagem": 7.058682596632321,
+    "bias_contagem": 2.875,
+    "corr_contagem": 0.968508625828389
+  }
+}
