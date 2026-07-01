@@ -274,46 +274,40 @@
 % 6
 \tightframe{Lacuna}
 \begin{columns}[T,totalwidth=\textwidth]
-\column{.47\textwidth}
-{\Large\bfseries O que já existia}
+\column{.48\textwidth}
+{\Large\bfseries A base entrega pontos; o sistema precisa entregar detecções.}
 
-\vspace{.35cm}
-\begin{tikzpicture}[node distance=.32cm]
-  \node[draw=ufpiBlue!35,fill=white,rounded corners=7pt,text width=5.2cm,inner sep=8pt] (a)
-    {\bfseries CRIC Cervix\\{\small\color{muted}imagens cervicais com pontos}};
-  \node[below=.25cm of a,draw=ufpiBlue!35,fill=white,rounded corners=7pt,text width=5.2cm,inner sep=8pt] (b)
-    {\bfseries Detecção em citologia\\{\small\color{muted}modelos para localizar células}};
-  \node[below=.25cm of b,draw=ufpiBlue!35,fill=white,rounded corners=7pt,text width=5.2cm,inner sep=8pt] (c)
-    {\bfseries Supervisão por pontos\\{\small\color{muted}ponto como pista espacial fraca}};
-\end{tikzpicture}
-
-\column{.53\textwidth}
-{\Large\bfseries O que faltava fechar}
-
-\vspace{.35cm}
+\vspace{.22cm}
 \begin{tikzpicture}[
-  flowstep/.style={draw=ufpiBlue!45,fill=white,rounded corners=6pt,
-    minimum width=1.48cm,minimum height=.9cm,align=center,font=\small},
-  arr/.style={-{Latex[length=2mm]},lineGray,thick}
+  box/.style={draw=ufpiBlue!45,fill=white,rounded corners=7pt,
+    text width=4.95cm,minimum height=1.02cm,align=center,inner sep=6pt},
+  arr/.style={-{Latex[length=2mm]},ufpiBlue!70,thick}
 ]
-  \node[flowstep] (p) at (0,0) {Pontos};
-  \node[flowstep] (d) at (1.88,0) {Detector};
-  \node[flowstep] (l) at (3.76,0) {Localiza\\células};
-  \node[flowstep] (c) at (5.64,0) {Conta\\por imagem};
-  \draw[arr] (p) -- (d);
-  \draw[arr] (d) -- (l);
-  \draw[arr] (l) -- (c);
+  \node[box] (in) at (0,0) {\bfseries Entrada\\[-1pt]{\small\color{muted}pontos nucleares}};
+  \node[box,draw=ufpiGold!75] (mid) at (0,-1.38) {\bfseries Etapa crítica\\[-1pt]{\small\color{muted}treinar o detector}};
+  \node[box,draw=tpGreen!60] (out) at (0,-2.76) {\bfseries Saída\\[-1pt]{\small\color{muted}localização + contagem}};
+  \draw[arr] (in) -- (mid);
+  \draw[arr] (mid) -- (out);
 \end{tikzpicture}
 
-\vspace{.45cm}
-\begin{itemize}
-  \item Treinar a partir de pontos sem perder o vínculo com a célula real.
-  \item Avaliar localização e contagem juntas, não só uma métrica isolada.
-  \item Confirmar a escolha em um teste retido.
-\end{itemize}
+\column{.52\textwidth}
+{\Large\bfseries O que precisava ser medido?}
 
-\vspace{.15cm}
-{\small\color{muted}Este trabalho mede esse caminho completo na CRIC Cervix.}
+\vspace{.18cm}
+\begin{tikzpicture}
+  \node[draw=ufpiBlue!45,fill=softBlue,rounded corners=8pt,
+    text width=6.0cm,align=left,inner sep=8pt] {
+    {\bfseries Pergunta do trabalho}\\[4pt]
+    {\large Como sair de pontos anotados para um detector que localiza e conta células de forma confiável?}
+  };
+\end{tikzpicture}
+
+\vspace{.28cm}
+\begin{itemize}
+  \item Se os pontos bastam para treinar um detector útil.
+  \item Como o treino afeta acertos, FP, FN e contagem.
+  \item Se a escolha se mantém em teste retido.
+\end{itemize}
 \end{columns}
 \end{frame}
 
