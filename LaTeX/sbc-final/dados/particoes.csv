@@ -1,0 +1,4 @@
+particao,imagens,celulas
+train,320,9236
+val,40,1149
+test,40,1149

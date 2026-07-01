@@ -1,0 +1,48 @@
+\section{Introdu\c{c}\~ao}
+
+O rastreamento do c\^ancer do colo do \'utero depende de programas capazes de
+identificar altera\c{c}\~oes precursoras antes da progress\~ao da doen\c{c}a. Em
+2020, foram estimados aproximadamente 604 mil novos casos e 342 mil \'obitos no
+mundo, com maior carga onde vacina\c{c}\~ao, rastreamento e tratamento s\~ao menos
+acess\'iveis \cite{singh2023global}. Na citologia convencional, a automa\c{c}\~ao
+tem sido estudada em classifica\c{c}\~ao de recortes, segmenta\c{c}\~ao,
+detec\c{c}\~ao de inst\^ancias e an\'alise de campos ou l\^aminas
+\cite{jiang2023systematic}.
+
+Essas tarefas dependem do tipo de anota\c{c}\~ao dispon\'ivel. Um ponto informa
+onde uma inst\^ancia est\'a, mas n\~ao sua extens\~ao; uma caixa acrescenta uma
+regi\~ao aproximada; uma m\'ascara descreve fronteiras. Portanto, transformar
+pontos em caixas n\~ao \'e apenas uma convers\~ao de formato: \'e uma decis\~ao
+sobre qual regi\~ao o detector deve aprender. Em campos com muitas c\'elulas, essa
+decis\~ao tamb\'em afeta sobreposi\c{c}\~ao entre alvos, localiza\c{c}\~ao e contagem
+\cite{chen2023p2bnet,chen2021sparsepoints,xia2023colorization}.
+
+A CRIC Cervix disponibiliza 400 imagens convencionais de Papanicolau e 11.534
+c\'elulas classificadas, cada uma associada a uma coordenada nuclear
+\cite{rezende2021cric}. A base permite estudar detec\c{c}\~ao sem recortar
+previamente as c\'elulas, mas n\~ao fornece bounding boxes anat\^omicas. Trabalhos
+anteriores usaram a CRIC em detec\c{c}\~ao e classifica\c{c}\~ao
+\cite{kalbhor2023cervicell}; ainda assim, a sensibilidade do resultado \`a
+geometria criada a partir dos pontos permanece pouco explorada.
+
+Este artigo formula o problema como detec\c{c}\~ao e contagem supervisionadas por
+pontos. N\~ao se prop\~oe uma nova arquitetura nem se usa a categoria Bethesda
+como sa\'ida: todas as coordenadas s\~ao tratadas como inst\^ancias de uma classe
+\'unica. O objetivo \'e determinar em que medida um detector treinado com
+pseudo-caixas recupera os pontos anotados, preserva a contagem por campo e quais
+erros aparecem quando essa sa\'ida \'e vista como etapa anterior a classifica\c{c}\~ao
+ou revis\~ao assistida.
+
+Tr\^es perguntas orientam o experimento. \textbf{RQ1:} quanto o tamanho da
+pseudo-caixa modifica F1, AP50 e erro de contagem? \textbf{RQ2:} aumentar a
+escala de YOLO11n para YOLO11s ou YOLO11m melhora o compromisso entre
+localiza\c{c}\~ao e contagem? \textbf{RQ3:} a configura\c{c}\~ao selecionada na
+valida\c{c}\~ao mant\'em desempenho no conjunto de teste retido? A principal
+contribui\c{c}\~ao \'e tornar mensur\'avel uma decis\~ao normalmente escondida na
+prepara\c{c}\~ao dos dados, com parti\c{c}\~oes por imagem, limiar escolhido sem
+acesso ao teste e intervalos de confian\c{c}a por bootstrap sobre imagens
+completas\footnote{C\'odigo, configura\c{c}\~oes e materiais do artigo:
+\url{https://github.com/JeanCarlos899/Pesquisa---Jean}.}. Essa formula\c{c}\~ao
+desloca o foco de uma escolha isolada de
+hiperpar\^ametro para a validade do fluxo ponto--detec\c{c}\~ao--contagem em
+citologia cervical.

@@ -1,0 +1,19 @@
+{
+  "best_weights": "outputs_detection//model_compare//yolo11s//checkpoints//best_cell_detector.pt",
+  "source_best_weights": "outputs_detection//model_compare//yolo11s//runs//yolo11s_832_box144_compare//weights//best.pt",
+  "save_dir": "outputs_detection//model_compare//yolo11s//runs//yolo11s_832_box144_compare",
+  "attempt": {
+    "name": "yolo11s_832_box144_compare",
+    "model": "yolo11s.pt",
+    "imgsz": 832,
+    "batch": 6,
+    "cache": false,
+    "plots": true,
+    "mosaic": 0.2,
+    "mixup": 0.0
+  },
+  "box_size_px": 144,
+  "epochs": 80,
+  "source_epochs": 60,
+  "patience": 20
+}

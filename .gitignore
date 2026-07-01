@@ -1,27 +1,56 @@
+# Python / local environment
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
 
-outputs_detection/
-materiais_artigo/
-
-*.aux
-*.bbl
-*.blg
-*.dvi
-*.log
-*.out
-*.synctex.gz
-
-.venv/
+# Local dataset and generated training artifacts
 cric_cervix/
+outputs_detection/
 outputs_binary/
-outputs_binary_copy.zip
-CRIC_CLASSIFICACAO_EXECUTADO.ipynb
+runs/
+tmp/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.weights
+outputs_detection_package.zip
+
+# Logs and process markers
+*.log
+*.pid
 pipeline.log
 pipeline.pid
 execucao_notebook.*.log
 execucao_notebook.pid
-archive/notebooks/*.ipynb
-archive/logs/*.log
-__pycache__/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.dvi
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+LaTeX/**/tmp/
+LaTeX/**/*.pdf
+
+# Notebooks and manual archives not needed for reproduction
+archive/
+cric_cervix_cell_detection_colab.ipynb
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

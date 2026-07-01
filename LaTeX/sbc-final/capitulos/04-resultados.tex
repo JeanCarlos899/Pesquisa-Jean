@@ -1,0 +1,177 @@
+\FloatBarrier
+\section{Resultados}
+
+\subsection{Sensibilidade ao tamanho do alvo}
+
+A Figura~\ref{fig:sweep-pgf} mostra que o efeito do tamanho da pseudo-caixa foi
+n\~ao monot\^onico. F1 e AP50 aumentaram das menores caixas at\'e uma regi\~ao de
+estabilidade, mas o tamanho 160 apresentou queda acentuada e supercontagem. O
+maior F1 foi 0,8253 em 192 pixels. O menor MAE (3,65) e o maior AP50 (0,8776)
+ocorreram em 176 pixels. Em 144 pixels, F1 foi 0,8228, AP50 0,8748 e MAE 4,40.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+ group style={group size=2 by 1,horizontal sep=1.15cm},
+ width=.45\textwidth,height=4.65cm,
+ xlabel={Lado da pseudo-caixa (px)},
+ xmin=40,xmax=200,xtick={48,72,96,120,144,168,192},
+ tick label style={font=\scriptsize},label style={font=\small},
+ grid=major,grid style={black!10},axis line style={black!65}
+]
+\nextgroupplot[ylabel={Desempenho},ymin=.62,ymax=.96,legend style={font=\scriptsize,draw=none,at={(.5,-.36)},anchor=north,legend columns=3}]
+\addplot[black,thick,mark=*] table[x=box_size_px,y=f1_val_iou50,col sep=comma]{dados/bbox_sweep.csv};
+\addlegendentry{F1@0,50}
+\addplot[black!50,thick,dashed,mark=square*] table[x=box_size_px,y=ap50_val,col sep=comma]{dados/bbox_sweep.csv};
+\addlegendentry{AP50}
+\addplot[black!30,thick,densely dotted,mark=triangle*] table[x=box_size_px,y=recall_val_iou50,col sep=comma]{dados/bbox_sweep.csv};
+\addlegendentry{Revoca\c{c}\~ao}
+\addplot[only marks,mark=*,mark size=3pt] coordinates {(144,0.8228176)};
+\nextgroupplot[ylabel={MAE de contagem},ymin=0,ymax=29]
+\addplot[black!55,thick,mark=triangle*] table[x=box_size_px,y=mae_contagem_val,col sep=comma]{dados/bbox_sweep.csv};
+\addplot[only marks,mark=triangle*,mark size=3pt] coordinates {(144,4.4)};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Sensibilidade ao tamanho do alvo na valida\c{c}\~ao. O marcador maior
+indica a configura\c{c}\~ao de 144 pixels usada na compara\c{c}\~ao de capacidade.}
+\label{fig:sweep-pgf}
+\end{figure}
+
+Os valores entre 96 e 192 pixels, exceto 160, formam um plat\^o estreito de F1
+(0,8157--0,8253); logo, os dados n\~ao sustentam um \'unico tamanho universal. O
+ponto de 144 pixels foi mantido por combinar AP50 pr\'oxima do m\'aximo
+(0,8748 vs.\ 0,8776 em 176), revoca\c{c}\~ao superior a 176 e 192
+(0,8285 vs.\ 0,7885 e 0,8059) e posi\c{c}\~ao intermedi\'aria no plat\^o. A
+instabilidade em 160 pixels n\~ao deve ser lida como benef\'icio de caixas maiores:
+nesse ponto, o detector saturou o teto de 300 detec\c{c}\~oes por imagem na
+valida\c{c}\~ao, com revoca\c{c}\~ao 0,955 e precis\~ao 0,496, sugerindo problema de
+calibra\c{c}\~ao do ponto operacional em um treino isolado.
+
+\subsection{Capacidade do modelo e limiar}
+
+Com pseudo-caixas de 144 pixels, YOLO11s apresentou o maior F1 (0,8363), AP50
+(0,8848) e o menor MAE (4,68) na valida\c{c}\~ao. YOLO11n ficou pr\'oximo, com F1
+0,8231 e MAE 4,83. YOLO11m atingiu a maior revoca\c{c}\~ao (0,8921), mas sua
+precis\~ao de 0,7158 elevou o MAE para 8,13 e reduziu F1 para 0,7943. A vantagem
+do YOLO11s sobre YOLO11n foi pequena (0,0132 em F1 e 0,0075 em AP50), portanto
+suporta a escolha operacional neste experimento, n\~ao uma afirma\c{c}\~ao geral de
+superioridade arquitetural. O YOLO11m foi descartado porque o aumento de
+revoca\c{c}\~ao n\~ao compensou falsos positivos e erro de contagem.
+
+Esse comportamento ilustra por que mAP de treinamento n\~ao deve ser o \'unico
+crit\'erio. Detectar mais candidatos pode ser desej\'avel em uma etapa de busca,
+mas transfere custo para supress\~ao de duplicidades ou revis\~ao posterior,
+sobretudo em campos densos. Assim, a escala do modelo n\~ao foi tratada como
+proxy autom\'atica de qualidade.
+
+Na sele\c{c}\~ao do ponto operacional, limiares baixos preservaram quase todas as
+c\'elulas, mas geraram muitas detec\c{c}\~oes excedentes: em 0,10, a revoca\c{c}\~ao
+foi 0,9661 e a precis\~ao 0,5187, com MAE 24,78. Em 0,50, a precis\~ao subiu para
+0,8853, mas a revoca\c{c}\~ao caiu para 0,6919 e o vi\'es tornou-se negativo
+($-6,28$ c\'elulas por imagem). O limiar 0,35 maximizou F1@0,50 (0,8363), com
+precis\~ao 0,7983, revoca\c{c}\~ao 0,8782, MAE 4,68 e vi\'es 2,88. O teste recebeu
+0,35 sem novo ajuste. A proximidade entre as curvas em IoU 0,30 e 0,50 indica
+que, nesse intervalo, a maioria das associa\c{c}\~oes aceitas no crit\'erio mais
+flex\'ivel tamb\'em satisfaz o crit\'erio de 0,50. A separa\c{c}\~ao em IoU 0,75
+evidencia a penaliza\c{c}\~ao adicional por desalinhamento fino com a
+pseudo-caixa; portanto, o resultado de teste mede transfer\^encia do ponto
+operacional, n\~ao o melhor limiar retrospectivo para aquela parti\c{c}\~ao.
+
+\subsection{Teste retido}
+
+Com YOLO11s, lado 144 e confian\c{c}a 0,35, o teste produziu 975 verdadeiros
+positivos, 257 falsos positivos e 174 falsos negativos. A
+Tabela~\ref{tab:teste-unificado} re\'une as medidas com intervalo de 95\% obtido
+por bootstrap de imagens.
+
+\begin{table}[htbp]
+\centering
+\caption{Resultado no teste retido. IC95\% por bootstrap de imagens.}
+\label{tab:teste-unificado}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{lrl@{\hspace{6mm}}lrl}
+\toprule
+M\'etrica & Valor & IC95\% & M\'etrica & Valor & IC95\% \\
+\midrule
+Precis\~ao & 0,7914 & [0,746; 0,833] & AP30 & 0,8843 & [0,858; 0,913] \\
+Revoca\c{c}\~ao & 0,8486 & [0,822; 0,877] & AP50 & 0,8723 & [0,843; 0,904] \\
+F1 & 0,8190 & [0,796; 0,842] & AP75 & 0,7515 & [0,695; 0,811] \\
+MAE & 4,675 & [3,150; 6,425] & RMSE & 7,216 & [4,560; 9,850] \\
+Vi\'es & 2,075 & [0,050; 4,126] & Correla\c{c}\~ao & 0,9434 & [0,874; 0,979] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Em m\'edia, o teste teve 24,4 verdadeiros positivos, 6,4 falsos positivos e 4,4
+falsos negativos por imagem. O F1 de teste ficou 0,0173 abaixo da valida\c{c}\~ao,
+enquanto AP50 caiu 0,0125, diferen\c{c}as compat\'iveis com transfer\^encia
+moderada entre duas amostras de 40 imagens. O vi\'es positivo indica 2,08
+detec\c{c}\~oes excedentes por imagem em m\'edia. A Figura~\ref{fig:qualitativo}
+mostra dois casos reais do teste: no primeiro, falsos positivos e falsos
+negativos se compensam na contagem; no segundo, a revoca\c{c}\~ao completa vem
+acompanhada de supercontagem por falsos positivos.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=.90\textwidth]{qualitativo_teste.png}
+\caption{Exemplos qualitativos do teste com YOLO11s, pseudo-caixa de 144 pixels
+e confian\c{c}a 0,35. No cabe\c{c}alho, Anotadas \'e o total de c\'elulas de
+refer\^encia e Preditas \'e o total de detec\c{c}\~oes. VP indica verdadeiro
+positivo (caixa verde), FP falso positivo (caixa laranja com X) e FN falso
+negativo (c\'irculo vermelho), no pareamento por IoU 0,50.}
+\label{fig:qualitativo}
+\end{figure}
+
+Esses exemplos mostram por que a contagem n\~ao deve ser lida isoladamente. Uma
+imagem pode ter erro absoluto nulo e ainda conter trocas locais entre omiss\~oes e
+detec\c{c}\~oes excedentes; outra pode recuperar todos os pontos anotados e,
+mesmo assim, gerar carga de revis\~ao por duplicidades ou estruturas confundidas
+com c\'elulas. Por isso, AP, F1, MAE e inspe\c{c}\~ao qualitativa s\~ao
+complementares neste problema.
+
+Na an\'alise explorat\'oria por tercis, o MAE foi 4,15 em imagens com 5--16
+c\'elulas, 3,69 entre 17--30 e 6,07 entre 32--94. A faixa mais densa concentrou
+maior erro absoluto, embora o F1 global permane\c{c}a 0,8190. A mediana global do
+erro foi 3 c\'elulas. Esses estratos foram definidos depois da avalia\c{c}\~ao
+principal e n\~ao devem ser interpretados como hip\'oteses confirmat\'orias, mas
+ajudam a localizar onde a contagem se torna mais sens\'ivel a duplicidades e
+omiss\~oes.
+
+A avalia\c{c}\~ao por dist\^ancia ao ponto confirma que o resultado n\~ao depende
+apenas da geometria da pseudo-caixa. Como n\'ucleos vizinhos distam em mediana 72
+pixels, raios abaixo desse valor associam cada predi\c{c}\~ao ao n\'ucleo correto,
+n\~ao a um adjacente. No teste, o F1 foi 0,812 em $R=32$ pixels e 0,821 em
+$R=48$, coincidindo com o F1 por IoU 0,50 (0,819). Duas medidas de natureza
+distinta, portanto, indicam localiza\c{c}\~ao efetiva dos n\'ucleos anotados.
+
+\subsection{Interpreta\c{c}\~ao}
+
+O experimento n\~ao recupera fronteiras celulares; ele aprende uma vizinhan\c{c}a
+quadrada ao redor do n\'ucleo. AP75 alta indica concord\^ancia com a regra da
+Equa\c{c}\~ao~\ref{eq:pseudobox}, n\~ao segmenta\c{c}\~ao precisa de n\'ucleo ou
+citoplasma. Essa distin\c{c}\~ao tamb\'em limita compara\c{c}\~oes diretas com
+m\'etodos de segmenta\c{c}\~ao ou classifica\c{c}\~ao Bethesda, pois m\'etrica,
+unidade de an\'alise, parti\c{c}\~ao e sem\^antica do r\'otulo precisam coincidir
+para sustentar superioridade num\'erica
+\cite{jiang2023systematic,kalbhor2023cervicell}.
+
+A obje\c{c}\~ao de que o IoU contra um alvo sint\'etico seria igualmente
+artificial \'e respondida pela avalia\c{c}\~ao por dist\^ancia: como o F1 por ponto
+converge ao F1 por IoU, a m\'etrica n\~ao depende criticamente da geometria
+adotada, e o n\'ucleo anotado -- \'unico ground truth espacial da CRIC -- \'e de
+fato recuperado. Ainda assim, pontos cont\^em informa\c{c}\~ao de inst\^ancia que
+r\'otulos globais n\~ao possuem. A literatura de supervis\~ao pontual mostra que
+essa informa\c{c}\~ao pode orientar localiza\c{c}\~ao e segmenta\c{c}\~ao com menor
+custo de anota\c{c}\~ao \cite{chen2021sparsepoints,xia2023colorization}.
+O resultado da RQ1 acrescenta uma observa\c{c}\~ao pr\'atica: quando pontos s\~ao
+convertidos em caixas, a geometria escolhida deve ser reportada e testada.
+
+A correla\c{c}\~ao 0,9434 mostra que o modelo acompanha a varia\c{c}\~ao de carga
+celular entre imagens; o MAE de 4,68 e o vi\'es de 2,08 revelam erro residual e
+tend\^encia de supercontagem. As causas prov\'aveis, n\~ao separadas por este
+experimento, s\~ao duplicidade em grupos sobrepostos, estruturas n\~ao celulares
+confundidas com o alvo e c\'elulas vis\'iveis sem ponto correspondente na
+anota\c{c}\~ao. Distinguir essas causas exige revis\~ao cega de falsos positivos por
+especialista.

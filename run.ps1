@@ -1,9 +1,9 @@
 param(
-    [ValidateSet("check", "status", "prepare", "train", "predict-val", "predict-test", "eval-val", "eval-test", "finalize", "bbox-sweep", "model-compare", "model-s", "model-m", "all", "materials", "materials-s", "materials-m", "package", "gpu", "clean-cache")]
+    [ValidateSet("check", "status", "download-data", "prepare", "train", "predict-val", "predict-test", "eval-val", "eval-test", "finalize", "bbox-sweep", "model-compare", "model-s", "model-m", "all", "materials", "materials-s", "materials-m", "package", "gpu", "clean-cache")]
     [string]$Step = "check",
     [switch]$Force,
     [string]$Config = "configs/local_3060.json",
-    [string]$Output = "materiais_artigo",
+    [string]$Output = "results/article_materials",
     [string[]]$Models = @("s"),
     [switch]$Test
 )
@@ -23,13 +23,13 @@ try {
         return
     }
     if ($Step -eq "clean-cache") {
-        Remove-Item -LiteralPath ".\__pycache__", ".\src\jean_pipeline\__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath ".\__pycache__", ".\src\cervical_cell_detection\__pycache__" -Recurse -Force -ErrorAction SilentlyContinue
         Write-Output "Caches Python removidos."
         return
     }
 
     $env:PYTHONPATH = Join-Path $Root "src"
-    $argsList = @("-m", "jean_pipeline")
+    $argsList = @("-m", "cervical_cell_detection")
     switch ($Step) {
         "predict-val" { $argsList += @("predict", "--split", "val") }
         "predict-test" { $argsList += @("predict", "--split", "test") }
