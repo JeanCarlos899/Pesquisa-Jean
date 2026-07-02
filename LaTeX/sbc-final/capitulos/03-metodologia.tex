@@ -1,27 +1,13 @@
 \FloatBarrier
 \section{Metodologia}
 
-\subsection{Dados e parti\c{c}\~oes}
+\subsection{Dados e alvo de detec\c{c}\~ao}
 
 Foram usadas as 400 imagens e as 11.534 coordenadas celulares da CRIC Cervix
 \cite{rezende2021cric}. As categorias Bethesda foram preservadas nos metadados
 para auditoria, mas n\~ao participaram do treinamento: a classe \'unica
-\textit{cell} agrega as seis categorias da base, de c\'elulas normais (58,8\%) a
-les\~oes de alto grau e carcinoma (HSIL 14,8\%, LSIL 11,8\%, ASC-H 8,0\%,
-ASC-US 5,3\% e SCC 1,4\%). Assim, a tarefa \'e de localiza\c{c}\~ao agn\'ostica
-\`a classe sobre um conjunto clinicamente heterog\^eneo.
-
-A imagem foi a unidade de parti\c{c}\~ao, na propor\c{c}\~ao 80/10/10. Para evitar
-concentra\c{c}\~ao de carga celular em uma parti\c{c}\~ao, as imagens foram
-ordenadas pelo n\'umero de c\'elulas e atribu\'idas de forma gulosa \`a parti\c{c}\~ao
-mais distante de sua meta proporcional de objetos (semente 42). O procedimento
-destinou 320 imagens ao treino, 40 \`a valida\c{c}\~ao e 40 ao teste, com 9.236,
-1.149 e 1.149 c\'elulas, respectivamente. Nenhuma imagem foi compartilhada entre
-parti\c{c}\~oes. Como a CRIC n\~ao disponibiliza identificador de paciente, a
-separa\c{c}\~ao por imagem \'e o maior controle de independ\^encia suportado pelos
-metadados, n\~ao uma garantia de independ\^encia cl\'inica.
-
-\subsection{Constru\c{c}\~ao do alvo e treinamento}
+\textit{cell} agrega todas as c\'elulas anotadas. Assim, a tarefa avaliada \'e de
+localiza\c{c}\~ao e contagem, n\~ao de classifica\c{c}\~ao diagn\'ostica.
 
 Para um ponto nuclear $(x_i,y_i)$ e lado $s$, definiu-se a pseudo-caixa
 
@@ -30,62 +16,73 @@ B_i(s)=\left[x_i-\frac{s}{2},\ y_i-\frac{s}{2},\ x_i+\frac{s}{2},\ y_i+\frac{s}{
 \label{eq:pseudobox}
 \end{equation}
 
-recortada aos limites da imagem e normalizada no formato YOLO. A transforma\c{c}\~ao
-fixa o centro fornecido pelo especialista, mas introduz uma hip\'otese sobre
-extens\~ao. Essa hip\'otese foi testada para
-$s\in\{48,64,72,96,112,128,144,160,176,192\}$ pixels.
+recortada aos limites da imagem e normalizada no formato YOLO. Essa regra fixa
+o centro informado pelo especialista, mas introduz uma hip\'otese sobre a
+extens\~ao espacial da inst\^ancia. A Figura~\ref{fig:construcao-alvo} ilustra
+essa transforma\c{c}\~ao em um campo real: os pontos nucleares s\~ao preservados,
+mas a caixa quadrada acrescenta uma vizinhan\c{c}a que pode se sobrepor em
+regi\~oes densas.
 
-O experimento foi encadeado em tr\^es fases. Na RQ1, cada valor de $s$ foi
-avaliado com YOLO11n por at\'e 35 \'epocas, isolando a sensibilidade ao alvo. Na
-RQ2, fixou-se $s=144$ e foram comparados YOLO11n, YOLO11s e YOLO11m. Na RQ3,
-apenas o YOLO11s selecionado e o limiar definido na valida\c{c}\~ao foram
-avaliados no teste retido.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=.98\textwidth]{construcao_pseudo_caixa.png}
+\caption{Constru\c{c}\~ao do alvo a partir de anota\c{c}\~oes pontuais. Verde
+indica o ponto nuclear original; vermelho indica a pseudo-caixa de 144 pixels
+usada no protocolo final.}
+\label{fig:construcao-alvo}
+\end{figure}
 
-Os modelos YOLO11 foram inicializados com pesos pr\'e-treinados. Usou-se AdamW,
-taxa
-inicial 0,002, agendamento cossenoidal, \textit{mosaic} moderado, varia\c{c}\~oes
-geom\'etricas/crom\'aticas e precis\~ao mista. YOLO11n e YOLO11s receberam entrada
-nominal 832; YOLO11m, 864. Os lotes foram 12, 6 e 4, respectivamente. As
-compara\c{c}\~oes de capacidade tiveram 80 \'epocas m\'aximas e paci\^encia 20. O
-treinamento foi executado em uma RTX 3060 Laptop com 6 GB de VRAM.
+\subsection{Sweep explorat\'orio do tamanho}
 
-\subsection{Avalia\c{c}\~ao}
+Antes da valida\c{c}\~ao final, foi executado um sweep explorat\'orio com
+$s\in\{48,64,72,96,112,128,144,160,176,192\}$ pixels. Cada tamanho foi treinado
+uma vez com YOLO11n por at\'e 35 \'epocas e avaliado em uma parti\c{c}\~ao
+explorat\'oria usada apenas para essa escolha. Essa etapa n\~ao \'e tratada como
+resultado final; seu papel \'e escolher uma geometria operacional para o
+protocolo final. O lado de 144 pixels foi mantido por estar no plat\^o de F1,
+com AP50 pr\'oxima do m\'aximo e menor risco
+de supercontagem que configura\c{c}\~oes mais inst\'aveis.
 
-As predi\c{c}\~oes foram exportadas pela rotina de valida\c{c}\~ao do Ultralytics,
-sem aumento no teste, e todas as m\'etricas foram recomputadas a partir delas. A
-associa\c{c}\~ao predi\c{c}\~ao--alvo priorizou maior IoU e imp\^os unicidade de
-ambos os lados. A AP em IoU 0,30, 0,50 e 0,75 foi obtida por interpola\c{c}\~ao de
-101 pontos; precis\~ao, revoca\c{c}\~ao e F1 completam o conjunto.
+\subsection{Valida\c{c}\~ao cruzada final}
 
-Como a pseudo-caixa \'e sint\'etica, adotou-se ainda um crit\'erio independente da
-sua geometria: uma detec\c{c}\~ao \'e correta se o centro da predi\c{c}\~ao estiver a
-at\'e $R$ pixels do ponto nuclear anotado, com associa\c{c}\~ao gulosa \'unica por
-menor dist\^ancia. O limiar de confian\c{c}a foi escolhido, em cada
-configura\c{c}\~ao, pelo maior F1 na valida\c{c}\~ao em IoU 0,50. Na fase RQ2/RQ3,
-os tr\^es modelos comparados atingiram pico em 0,35; o valor do YOLO11s foi usado
-na abertura do teste.
+Com $s=144$, a avalia\c{c}\~ao final usou valida\c{c}\~ao cruzada 5-fold por
+imagem. Todas as 400 imagens entraram no particionamento. Em cada fold, 80
+imagens foram mantidas como teste externo; as 320 restantes foram divididas em
+280 imagens de treino e 40 de valida\c{c}\~ao interna. Os folds foram
+balanceados de forma gulosa pela quantidade de c\'elulas por imagem. Nos cinco
+folds, os testes externos tiveram 80 imagens e entre 2.306 e 2.307
+c\'elulas cada, e cada imagem apareceu exatamente uma vez como teste externo.
 
-Para cada imagem $j$, com contagem anotada $g_j$ e predita $p_j$, foram
-calculados
+A valida\c{c}\~ao interna foi usada para early stopping, escolha do checkpoint
+\textit{best.pt} e sele\c{c}\~ao do limiar operacional pelo maior F1 em IoU 0,50.
+O teste externo do fold foi avaliado uma \'unica vez com esse checkpoint e esse
+limiar. Nenhuma m\'etrica do teste externo foi usada para alterar pesos,
+limiares ou tamanho da pseudo-caixa. Como a CRIC n\~ao disponibiliza identificador
+de paciente, a independ\^encia foi controlada no n\'ivel de imagem, que \'e o
+maior controle suportado pelos metadados.
+
+\subsection{Treinamento e m\'etricas}
+
+O detector final foi YOLO11s inicializado com pesos pr\'e-treinados, entrada
+nominal 832, lote 6, AdamW, taxa inicial 0,002, agendamento cossenoidal,
+precis\~ao mista e aumento geom\'etrico/crom\'atico moderado. Cada fold treinou
+por at\'e 55 \'epocas, com paci\^encia 12, em uma RTX 3060 Laptop com 6 GB de
+VRAM. Os melhores checkpoints ocorreram entre as \'epocas 24 e 55.
+
+As predi\c{c}\~oes foram exportadas pela rotina de valida\c{c}\~ao do Ultralytics e
+todas as m\'etricas foram recomputadas a partir dos CSVs gerados. A
+associa\c{c}\~ao entre predi\c{c}\~ao e alvo priorizou maior IoU e
+imp\^os unicidade de ambos os lados. Foram reportados precision, recall, F1 e
+AP50 para detec\c{c}\~ao, al\'em de MAE, RMSE e bias para contagem por imagem.
+Para cada imagem $j$, com contagem anotada $g_j$ e predita $p_j$, calcularam-se
 
 \begin{equation}
 \mathrm{MAE}=\frac{1}{N}\sum_j|p_j-g_j|,\qquad
 \mathrm{bias}=\frac{1}{N}\sum_j(p_j-g_j).
 \end{equation}
 
-RMSE e correla\c{c}\~ao complementaram a an\'alise. Intervalos de 95\% foram
-obtidos com 1.000 r\'eplicas de bootstrap sobre imagens completas, preservando a
-depend\^encia entre c\'elulas do mesmo campo. Nenhuma m\'etrica de teste foi usada
-para alterar pesos, lado da caixa ou limiar.
-
-\subsection{Rastreabilidade}
-
-Cada etapa produziu artefatos persistentes: listas de imagens por parti\c{c}\~ao,
-metadados das pseudo-caixas, configura\c{c}\~oes de treino, hist\'oricos por
-\'epoca, pesos selecionados, predi\c{c}\~oes por imagem e tabelas de m\'etricas.
-Figuras e valores reportados derivam desses arquivos, sem transcri\c{c}\~ao
-manual. As decis\~oes foram encadeadas de modo unilateral: RQ1 definiu a regi\~ao
-de pseudo-caixas; RQ2 comparou capacidades com o mesmo alvo; a valida\c{c}\~ao
-selecionou confian\c{c}a; e somente ent\~ao o teste foi avaliado. O sweep \'e
-tratado como an\'alise explorat\'oria, pois uma execu\c{c}\~ao por configura\c{c}\~ao
-n\~ao separa totalmente efeito do alvo e varia\c{c}\~ao de treino.
+Os resultados finais s\~ao apresentados como m\'edia e desvio-padr\~ao entre os
+cinco testes externos. A descri\c{c}\~ao do particionamento, do crit\'erio de
+refer\^encia, dos hiperpar\^ametros e da sele\c{c}\~ao de limiar segue recomenda\c{c}\~oes
+gerais de transpar\^encia para estudos de intelig\^encia artificial aplicada a imagens m\'edicas
+\cite{mongan2020claim,tejani2024claim}.

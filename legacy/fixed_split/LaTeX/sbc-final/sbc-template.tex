@@ -1,0 +1,63 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\IfFileExists{placeins.sty}{\usepackage{placeins}}{\newcommand{\FloatBarrier}{}}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{positioning,arrows.meta}
+
+\graphicspath{{figuras/}}
+\urlstyle{same}
+\sloppy
+
+\title{Detec\c{c}\~ao e Contagem de C\'elulas Cervicais a partir de Anota\c{c}\~oes Pontuais}
+
+\author{Jean Carlos Rodrigues Sousa\inst{1}, Jo\~ao Ant\^onio Leal de Miranda\inst{1},\\
+Romuere Rodrigues Veloso e Silva\inst{1}}
+
+\address{Campus Senador Helv\'idio Nunes de Barros (CSHNB)\\
+Universidade Federal do Piau\'i (UFPI) -- Picos, PI -- Brasil
+\email{\{jean.rodrigues,joaoantonio,romuere\}@ufpi.edu.br}}
+
+\begin{document}
+
+\maketitle
+
+\begin{resumo}
+Anota\c{c}\~oes pontuais identificam centros celulares, mas n\~ao definem a
+extens\~ao do objeto. Este trabalho avalia um fluxo de detec\c{c}\~ao e contagem
+de c\'elulas cervicais na CRIC Cervix a partir desses pontos, investigando dez
+tamanhos de pseudo-caixa (48--192 pixels) e tr\^es escalas YOLO11, com
+parti\c{c}\~oes separadas por imagem. O F1 de valida\c{c}\~ao forma um plat\^o
+entre 96 e 192 pixels, com compromissos distintos de precis\~ao, revoca\c{c}\~ao e
+contagem; o alvo de 144 pixels foi mantido como ponto operacional intermedi\'ario
+e o YOLO11s deu o melhor equil\'ibrio. No teste retido, alcan\c{c}ou AP50=0,8723,
+F1=0,8190 e erro absoluto m\'edio de 4,68 c\'elulas por imagem. Um crit\'erio de
+dist\^ancia ao ponto, independente da caixa sint\'etica, produz F1 equivalente,
+confirmando localiza\c{c}\~ao real dos n\'ucleos. A contribui\c{c}\~ao \'e uma
+an\'alise audit\'avel de como a constru\c{c}\~ao do alvo afeta localiza\c{c}\~ao,
+calibra\c{c}\~ao e contagem, sem reivindicar caixas anat\^omicas ou uso
+diagn\'ostico.
+\end{resumo}
+
+\input{capitulos/01-introducao}
+\input{capitulos/02-trabalhos-relacionados}
+\input{capitulos/03-metodologia}
+\input{capitulos/04-resultados}
+\input{capitulos/06-conclusao}
+
+\bibliographystyle{sbc}
+\bibliography{sbc-template}
+
+\end{document}

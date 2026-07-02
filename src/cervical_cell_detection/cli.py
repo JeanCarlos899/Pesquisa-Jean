@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -9,10 +8,15 @@ from pathlib import Path
 import pandas as pd
 
 from .config import Config, load_config
-from .data import prepare_dataset
+from .data import load_metadata, prepare_kfold_dataset
 from .download_data import download_cric_cervix
-from .materials import make_materials
-from .metrics import evaluate_detector, finalize_test_metrics
+from .metrics import (
+    detection_metrics_from_counts,
+    evaluate_detector,
+    load_predictions,
+    per_image_counts,
+    select_operating_threshold,
+)
 from .yolo import check_environment, predict_split, train_detector
 
 
@@ -27,109 +31,9 @@ def cmd_check(args) -> None:
     print("JEAN_ENV_READY")
 
 
-def cmd_prepare(args) -> None:
-    config = load_config(args.config)
-    prepare_dataset(config, force=args.force)
-
-
 def cmd_download_data(args) -> None:
     config = load_config(args.config)
     download_cric_cervix(config.data_dir, force=args.force)
-
-
-def cmd_train(args) -> None:
-    config = load_config(args.config)
-    prepare_dataset(config, force=False)
-    train_detector(config, force=args.force)
-
-
-def cmd_predict(args) -> None:
-    config = load_config(args.config)
-    predict_split(config, args.split, force=args.force)
-
-
-def cmd_eval(args) -> None:
-    config = load_config(args.config)
-    predict_split(config, args.split, force=args.force)
-    evaluate_detector(config, args.split, force=args.force)
-    if args.split == "test":
-        if not (config.metrics_dir / "avaliacao_val_limiares.csv").exists():
-            predict_split(config, "val", force=False)
-            evaluate_detector(config, "val", force=False)
-        finalize_test_metrics(config, force=args.force)
-
-
-def cmd_finalize(args) -> None:
-    config = load_config(args.config)
-    finalize_test_metrics(config, force=args.force)
-
-
-def cmd_materials(args) -> None:
-    base = load_config(args.config)
-    config = base
-    if args.model != "main":
-        config = model_compare_config(base, args.model)
-        config.metrics_dir.mkdir(parents=True, exist_ok=True)
-        for name in ["bbox_sweep_summary.csv", "model_compare_summary.csv"]:
-            source = base.metrics_dir / name
-            target = config.metrics_dir / name
-            if source.exists():
-                shutil.copy2(source, target)
-    make_materials(config, output_dir=args.output)
-
-
-def cmd_all(args) -> None:
-    config = load_config(args.config)
-    prepare_dataset(config, force=args.force)
-    train_detector(config, force=args.force)
-    for split in ["val", "test"]:
-        predict_split(config, split, force=args.force)
-        evaluate_detector(config, split, force=args.force)
-    finalize_test_metrics(config, force=args.force)
-    make_materials(config, output_dir=args.output)
-
-
-def cmd_bbox_sweep(args) -> None:
-    base = load_config(args.config)
-    rows = []
-    start = time.time()
-    for size in base.box_size_candidates:
-        print("=" * 88)
-        print(f"BBox pseudo-GT ablation: {size}px")
-        print("=" * 88)
-        sweep_config: Config = replace(
-            base,
-            box_size_px=int(size),
-            output_dir=base.output_dir / "bbox_sweep" / f"box_{int(size):03d}",
-            epochs=base.ablation_epochs,
-            patience=base.ablation_patience,
-            train_attempts=base.ablation_train_attempts,
-        )
-        prepare_dataset(sweep_config, force=args.force)
-        train_detector(sweep_config, force=args.force)
-        predict_split(sweep_config, "val", force=args.force)
-        evaluate_detector(sweep_config, "val", force=args.force)
-        val = pd.read_csv(sweep_config.metrics_dir / "avaliacao_val_limiares.csv")
-        best = val[val["iou"].eq(0.50)].sort_values(["f1", "revocacao", "precisao"], ascending=False).iloc[0]
-        ap = pd.read_csv(sweep_config.metrics_dir / "map_val.csv")
-        ap50 = float(ap.loc[ap["iou"].eq(0.50), "ap"].iloc[0])
-        rows.append(
-            {
-                "box_size_px": int(size),
-                "best_conf_val_iou50": float(best["conf"]),
-                "f1_val_iou50": float(best["f1"]),
-                "precisao_val_iou50": float(best["precisao"]),
-                "revocacao_val_iou50": float(best["revocacao"]),
-                "mae_contagem_val": float(best["mae_contagem"]),
-                "ap50_val": ap50,
-                "output_dir": str(sweep_config.output_dir),
-            }
-        )
-    summary = pd.DataFrame(rows).sort_values(["f1_val_iou50", "ap50_val"], ascending=False)
-    base.metrics_dir.mkdir(parents=True, exist_ok=True)
-    summary.to_csv(base.metrics_dir / "bbox_sweep_summary.csv", index=False)
-    print(summary.to_string(index=False))
-    print(f"BBox sweep time: {(time.time() - start) / 60:.1f} min")
 
 
 def best_training_metrics(run_dir: Path) -> dict:
@@ -155,114 +59,208 @@ def best_training_metrics(run_dir: Path) -> dict:
         return {}
     return max(rows.values(), key=lambda item: item["train_best_map50"])
 
-
-def model_summary_row(config: Config, model_label: str, force: bool = False) -> dict:
-    predict_split(config, "val", force=force)
-    evaluate_detector(config, "val", force=force)
-    val = pd.read_csv(config.metrics_dir / "avaliacao_val_limiares.csv")
-    best = val[val["iou"].eq(0.50)].sort_values(["f1", "revocacao", "precisao"], ascending=False).iloc[0]
-    ap = pd.read_csv(config.metrics_dir / "map_val.csv")
-    row = {
-        "modelo": model_label,
-        "box_size_px": config.box_size_px,
-        "best_conf_val_iou50": float(best["conf"]),
-        "f1_val_iou50": float(best["f1"]),
-        "precisao_val_iou50": float(best["precisao"]),
-        "revocacao_val_iou50": float(best["revocacao"]),
-        "mae_contagem_val": float(best["mae_contagem"]),
-        "ap50_val_custom": float(ap.loc[ap["iou"].eq(0.50), "ap"].iloc[0]),
-        "output_dir": str(config.output_dir),
-    }
-    row.update(best_training_metrics(config.runs_dir))
-    return row
-
-
-def cmd_model_compare(args) -> None:
-    base = load_config(args.config)
-    rows = []
-    start = time.time()
-    requested = [model.lower() for model in args.models]
-    if base.best_weights.exists():
-        print("=" * 88)
-        print("Model capacity comparison baseline: YOLO11n")
-        print("=" * 88)
-        rows.append(model_summary_row(base, "YOLO11n", force=False))
-    for model_name in requested:
-        if model_name not in base.model_compare_attempts:
-            raise ValueError(f"Modelo desconhecido para comparacao: {model_name}. Use s ou m.")
-        print("=" * 88)
-        print(f"Model capacity comparison: YOLO11{model_name} | bbox={base.box_size_px}px")
-        print("=" * 88)
-        compare_config = model_compare_config(base, model_name)
-        prepare_dataset(compare_config, force=args.force)
-        if args.test and compare_config.best_weights.exists() and not args.force:
-            print(f"Using frozen checkpoint for test evaluation: {compare_config.best_weights}")
-        else:
-            train_detector(compare_config, force=args.force)
-        if args.test:
-            predict_split(compare_config, "test", force=args.force)
-            evaluate_detector(compare_config, "test", force=args.force)
-            finalize_test_metrics(compare_config, force=args.force)
-
-        rows.append(model_summary_row(compare_config, f"YOLO11{model_name}", force=args.force))
-
-    out = base.metrics_dir / "model_compare_summary.csv"
-    base.metrics_dir.mkdir(parents=True, exist_ok=True)
-    current = pd.DataFrame(rows)
-    if out.exists() and not args.force:
-        previous = pd.read_csv(out)
-        current = pd.concat([previous[~previous["modelo"].isin(current["modelo"])], current], ignore_index=True)
-    current = current.sort_values(["f1_val_iou50", "ap50_val_custom"], ascending=False)
-    current.to_csv(out, index=False)
-    print(current.to_string(index=False))
-    print(f"Model comparison time: {(time.time() - start) / 60:.1f} min")
-
-
-def model_compare_config(base: Config, model_name: str) -> Config:
+def kfold_model_config(base: Config, model_name: str, fold: int, folds: int, epochs: int, patience: int) -> Config:
     model_name = model_name.lower()
-    if model_name not in base.model_compare_attempts:
-        raise ValueError(f"Modelo desconhecido para comparacao: {model_name}. Use s ou m.")
+    attempts = base.kfold_train_attempts
+    if not attempts:
+        raise ValueError("kfold_train_attempts must be configured for the current protocol.")
     return replace(
         base,
-        output_dir=base.output_dir / "model_compare" / f"yolo11{model_name}",
-        epochs=base.model_compare_epochs,
-        patience=base.model_compare_patience,
-        train_attempts=base.model_compare_attempts[model_name],
+        output_dir=base.output_dir / "kfold" / f"yolo11{model_name}_box{base.box_size_px}" / f"fold_{fold:02d}",
+        epochs=epochs,
+        patience=patience,
+        train_attempts=attempts,
+        kfold_splits=folds,
+        kfold_model=model_name,
     )
+
+
+def fold_operating_row(config: Config, fold: int, model_name: str, selected_threshold: dict, split: str = "test", iou: float = 0.50) -> dict:
+    grid = pd.read_csv(config.metrics_dir / f"avaliacao_{split}_limiares.csv")
+    grid_iou = grid[grid["iou"].eq(iou)].copy()
+    if grid_iou.empty:
+        raise ValueError(f"No {split} rows for IoU={iou} in {config.metrics_dir}")
+    selected_conf = float(selected_threshold["conf"])
+    selected = grid_iou.iloc[(grid_iou["conf"] - selected_conf).abs().argsort()].iloc[0]
+
+    metadata = load_metadata(config)
+    gt = metadata[metadata["particao"] == split].copy()
+    pred = load_predictions(config.output_dir / f"predicoes_{split}.csv")
+    per_image = per_image_counts(gt, pred, float(selected["conf"]), iou)
+    per_image["fold"] = fold
+    per_image.to_csv(config.metrics_dir / f"contagem_por_imagem_{split}_fold.csv", index=False)
+    totals = detection_metrics_from_counts(int(per_image["tp"].sum()), int(per_image["fp"].sum()), int(per_image["fn"].sum()))
+    error = per_image["erro_contagem"]
+
+    ap = pd.read_csv(config.metrics_dir / f"map_{split}.csv")
+    ap_iou = float(ap.loc[ap["iou"].eq(iou), "ap"].iloc[0])
+    train_info = best_training_metrics(config.runs_dir)
+    return {
+        "fold": fold,
+        "modelo": f"YOLO11{model_name}",
+        "box_size_px": config.box_size_px,
+        "split_avaliado": split,
+        "heldout_imagens": int(gt["caminho_imagem"].nunique()),
+        "heldout_celulas": int(len(gt)),
+        "conf_selecionado_val": float(selected_conf),
+        "conf_aplicado_teste": float(selected["conf"]),
+        "iou": iou,
+        "tp": totals["tp"],
+        "fp": totals["fp"],
+        "fn": totals["fn"],
+        "precisao": totals["precisao"],
+        "revocacao": totals["revocacao"],
+        "f1": totals["f1"],
+        "mae_contagem": float(error.abs().mean()),
+        "rmse_contagem": float((error.pow(2).mean()) ** 0.5),
+        "bias_contagem": float(error.mean()),
+        "ap50": ap_iou,
+        "f1_val_interno": float(selected_threshold["metricas_validacao"]["f1"]),
+        "mae_val_interno": float(selected_threshold["metricas_validacao"]["mae_contagem"]),
+        "output_dir": str(config.output_dir),
+        **train_info,
+    }
+
+
+def simple_markdown(table: pd.DataFrame) -> str:
+    data = table.copy()
+    lines = [
+        "| " + " | ".join(map(str, data.columns)) + " |",
+        "| " + " | ".join(["---"] * len(data.columns)) + " |",
+    ]
+    for row in data.to_numpy():
+        lines.append("| " + " | ".join(map(str, row)) + " |")
+    return "\n".join(lines) + "\n"
+
+
+def write_kfold_summary(rows: list[dict], output_dir: str | Path) -> None:
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    folds = pd.DataFrame(rows).sort_values("fold")
+    folds.to_csv(out / "kfold_folds.csv", index=False)
+    metric_columns = ["precisao", "revocacao", "f1", "mae_contagem", "rmse_contagem", "bias_contagem", "ap50"]
+    summary_rows = []
+    for metric in metric_columns:
+        values = folds[metric].astype(float)
+        summary_rows.append(
+            {
+                "metrica": metric,
+                "media": float(values.mean()),
+                "desvio_padrao": float(values.std(ddof=1)) if len(values) > 1 else 0.0,
+                "min": float(values.min()),
+                "max": float(values.max()),
+            }
+        )
+    pd.DataFrame(summary_rows).to_csv(out / "kfold_resumo.csv", index=False)
+    (out / "kfold_folds.md").write_text(
+        simple_markdown(
+            folds[
+                [
+                    "fold",
+                    "split_avaliado",
+                    "heldout_imagens",
+                    "heldout_celulas",
+                    "conf_selecionado_val",
+                    "conf_aplicado_teste",
+                    "f1",
+                    "precisao",
+                    "revocacao",
+                    "mae_contagem",
+                    "ap50",
+                    "f1_val_interno",
+                ]
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (out / "kfold_resumo.md").write_text(simple_markdown(pd.DataFrame(summary_rows)), encoding="utf-8")
+    readme = [
+        "# K-fold box 144",
+        "",
+        "Validacao cruzada por imagem. Cada fold usa um quinto das imagens como teste externo e separa uma validacao interna apenas dentro dos quatro quintos restantes.",
+        "",
+        "- `kfold_folds.csv`: metricas por fold no teste externo, usando o limiar escolhido na validacao interna daquele fold.",
+        "- `kfold_resumo.csv`: media, desvio-padrao, minimo e maximo entre folds.",
+        "- `kfold_folds.md` e `kfold_resumo.md`: versoes rapidas para leitura.",
+        "",
+        "Artefatos pesados de cada fold ficam nos `output_dir` registrados em `kfold_folds.csv`.",
+    ]
+    (out / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
+    print(f"K-fold article-ready summary saved to: {out.resolve()}")
+
+
+def cmd_kfold(args) -> None:
+    base = load_config(args.config)
+    folds = int(args.folds or base.kfold_splits)
+    model_name = str(base.kfold_model).lower()
+    epochs = int(args.epochs or base.kfold_epochs)
+    patience = int(args.patience or base.kfold_patience)
+    output_dir = args.output or Path("results") / f"kfold_box{base.box_size_px}_yolo11{model_name}"
+
+    print("=" * 88)
+    print(
+        f"K-fold: YOLO11{model_name} | box={base.box_size_px}px | folds={folds} | "
+        f"epochs={epochs} | patience={patience} | threshold=internal-val"
+    )
+    print("=" * 88)
+    if args.dry_run:
+        for fold in range(1, folds + 1):
+            fold_config = kfold_model_config(base, model_name, fold, folds, epochs, patience)
+            prepare_kfold_dataset(fold_config, fold=fold, n_splits=folds, force=False)
+        print("Dry run complete: folds prepared, training not started.")
+        return
+
+    rows = []
+    start = time.time()
+    for fold in range(1, folds + 1):
+        print("=" * 88)
+        print(f"K-fold training/evaluation: fold {fold}/{folds}")
+        print("=" * 88)
+        fold_config = kfold_model_config(base, model_name, fold, folds, epochs, patience)
+        prepare_kfold_dataset(fold_config, fold=fold, n_splits=folds, force=args.force)
+        train_detector(fold_config, force=args.force)
+        predict_split(fold_config, "val", force=args.force)
+        evaluate_detector(fold_config, "val", force=args.force)
+        selected_threshold = select_operating_threshold(fold_config)
+        predict_split(fold_config, "test", force=args.force)
+        evaluate_detector(fold_config, "test", force=args.force)
+        rows.append(fold_operating_row(fold_config, fold, model_name, selected_threshold=selected_threshold, split="test"))
+
+    write_kfold_summary(rows, output_dir=output_dir)
+    print(pd.DataFrame(rows).sort_values("fold").to_string(index=False))
+    print(f"K-fold time: {(time.time() - start) / 60:.1f} min")
 
 
 def cmd_status(args) -> None:
     config = load_config(args.config)
     artifacts = [
-        ("metadata", config.metadata_csv),
-        ("data_yaml", config.data_yaml),
-        ("best_weights", config.best_weights),
-        ("pred_val", config.output_dir / "predicoes_val.csv"),
-        ("eval_val", config.metrics_dir / "avaliacao_val_limiares.csv"),
-        ("pred_test", config.output_dir / "predicoes_test.csv"),
-        ("eval_test", config.metrics_dir / "avaliacao_test_limiares.csv"),
-        ("operational_test", config.metrics_dir / "metricas_operacionais_teste.csv"),
-        ("bbox_sweep", config.metrics_dir / "bbox_sweep_summary.csv"),
-        ("model_compare", config.metrics_dir / "model_compare_summary.csv"),
+        ("kfold_summary_csv", Path("results") / f"kfold_box{config.box_size_px}_yolo11{config.kfold_model}" / "kfold_resumo.csv"),
+        ("kfold_folds_csv", Path("results") / f"kfold_box{config.box_size_px}_yolo11{config.kfold_model}" / "kfold_folds.csv"),
     ]
+    for fold in range(1, config.kfold_splits + 1):
+        fold_config = kfold_model_config(
+            config,
+            config.kfold_model,
+            fold,
+            config.kfold_splits,
+            config.kfold_epochs,
+            config.kfold_patience,
+        )
+        artifacts.extend(
+            [
+                (f"fold_{fold:02d}_data_yaml", fold_config.data_yaml),
+                (f"fold_{fold:02d}_split", fold_config.split_summary_csv),
+                (f"fold_{fold:02d}_best", fold_config.best_weights),
+                (f"fold_{fold:02d}_threshold", fold_config.metrics_dir / "limiar_operacional.json"),
+                (f"fold_{fold:02d}_eval_test", fold_config.metrics_dir / "avaliacao_test_limiares.csv"),
+            ]
+        )
     for name, path in artifacts:
         if path.exists():
             size_mb = path.stat().st_size / 1024**2
             print(f"[ok]       {name:18s} {path} ({size_mb:.2f} MB)")
         else:
             print(f"[missing]  {name:18s} {path}")
-
-
-def cmd_package(args) -> None:
-    config = load_config(args.config)
-    target = shutil.make_archive(
-        str(config.output_dir.with_name("outputs_detection_package")),
-        "zip",
-        root_dir=config.output_dir.parent,
-        base_dir=config.output_dir.name,
-    )
-    print(f"Package saved to: {target}")
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="CRIC Cervix single-class cell detection pipeline")
@@ -271,29 +269,17 @@ def build_parser() -> argparse.ArgumentParser:
         "check": cmd_check,
         "status": cmd_status,
         "download-data": cmd_download_data,
-        "prepare": cmd_prepare,
-        "train": cmd_train,
-        "predict": cmd_predict,
-        "eval": cmd_eval,
-        "finalize": cmd_finalize,
-        "bbox-sweep": cmd_bbox_sweep,
-        "model-compare": cmd_model_compare,
-        "materials": cmd_materials,
-        "all": cmd_all,
-        "package": cmd_package,
+        "kfold": cmd_kfold,
     }
     for name, fn in commands.items():
         command = sub.add_parser(name)
         add_common(command)
-        if name in {"predict", "eval"}:
-            command.add_argument("--split", choices=["train", "val", "test"], default="test")
-        if name in {"materials", "all"}:
-            command.add_argument("--output", default="results/article_materials")
-        if name == "materials":
-            command.add_argument("--model", choices=["main", "s", "m"], default="main")
-        if name == "model-compare":
-            command.add_argument("--models", nargs="+", default=["s"], choices=["s", "m"])
-            command.add_argument("--test", action="store_true")
+        if name == "kfold":
+            command.add_argument("--folds", type=int, default=None)
+            command.add_argument("--epochs", type=int, default=None)
+            command.add_argument("--patience", type=int, default=None)
+            command.add_argument("--output", default=None)
+            command.add_argument("--dry-run", action="store_true")
         command.set_defaults(func=fn)
     return parser
 

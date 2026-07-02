@@ -1,0 +1,91 @@
+\FloatBarrier
+\section{Metodologia}
+
+\subsection{Dados e parti\c{c}\~oes}
+
+Foram usadas as 400 imagens e as 11.534 coordenadas celulares da CRIC Cervix
+\cite{rezende2021cric}. As categorias Bethesda foram preservadas nos metadados
+para auditoria, mas n\~ao participaram do treinamento: a classe \'unica
+\textit{cell} agrega as seis categorias da base, de c\'elulas normais (58,8\%) a
+les\~oes de alto grau e carcinoma (HSIL 14,8\%, LSIL 11,8\%, ASC-H 8,0\%,
+ASC-US 5,3\% e SCC 1,4\%). Assim, a tarefa \'e de localiza\c{c}\~ao agn\'ostica
+\`a classe sobre um conjunto clinicamente heterog\^eneo.
+
+A imagem foi a unidade de parti\c{c}\~ao, na propor\c{c}\~ao 80/10/10. Para evitar
+concentra\c{c}\~ao de carga celular em uma parti\c{c}\~ao, as imagens foram
+ordenadas pelo n\'umero de c\'elulas e atribu\'idas de forma gulosa \`a parti\c{c}\~ao
+mais distante de sua meta proporcional de objetos (semente 42). O procedimento
+destinou 320 imagens ao treino, 40 \`a valida\c{c}\~ao e 40 ao teste, com 9.236,
+1.149 e 1.149 c\'elulas, respectivamente. Nenhuma imagem foi compartilhada entre
+parti\c{c}\~oes. Como a CRIC n\~ao disponibiliza identificador de paciente, a
+separa\c{c}\~ao por imagem \'e o maior controle de independ\^encia suportado pelos
+metadados, n\~ao uma garantia de independ\^encia cl\'inica.
+
+\subsection{Constru\c{c}\~ao do alvo e treinamento}
+
+Para um ponto nuclear $(x_i,y_i)$ e lado $s$, definiu-se a pseudo-caixa
+
+\begin{equation}
+B_i(s)=\left[x_i-\frac{s}{2},\ y_i-\frac{s}{2},\ x_i+\frac{s}{2},\ y_i+\frac{s}{2}\right],
+\label{eq:pseudobox}
+\end{equation}
+
+recortada aos limites da imagem e normalizada no formato YOLO. A transforma\c{c}\~ao
+fixa o centro fornecido pelo especialista, mas introduz uma hip\'otese sobre
+extens\~ao. Essa hip\'otese foi testada para
+$s\in\{48,64,72,96,112,128,144,160,176,192\}$ pixels.
+
+O experimento foi encadeado em tr\^es fases. Na RQ1, cada valor de $s$ foi
+avaliado com YOLO11n por at\'e 35 \'epocas, isolando a sensibilidade ao alvo. Na
+RQ2, fixou-se $s=144$ e foram comparados YOLO11n, YOLO11s e YOLO11m. Na RQ3,
+apenas o YOLO11s selecionado e o limiar definido na valida\c{c}\~ao foram
+avaliados no teste retido.
+
+Os modelos YOLO11 foram inicializados com pesos pr\'e-treinados. Usou-se AdamW,
+taxa
+inicial 0,002, agendamento cossenoidal, \textit{mosaic} moderado, varia\c{c}\~oes
+geom\'etricas/crom\'aticas e precis\~ao mista. YOLO11n e YOLO11s receberam entrada
+nominal 832; YOLO11m, 864. Os lotes foram 12, 6 e 4, respectivamente. As
+compara\c{c}\~oes de capacidade tiveram 80 \'epocas m\'aximas e paci\^encia 20. O
+treinamento foi executado em uma RTX 3060 Laptop com 6 GB de VRAM.
+
+\subsection{Avalia\c{c}\~ao}
+
+As predi\c{c}\~oes foram exportadas pela rotina de valida\c{c}\~ao do Ultralytics,
+sem aumento no teste, e todas as m\'etricas foram recomputadas a partir delas. A
+associa\c{c}\~ao predi\c{c}\~ao--alvo priorizou maior IoU e imp\^os unicidade de
+ambos os lados. A AP em IoU 0,30, 0,50 e 0,75 foi obtida por interpola\c{c}\~ao de
+101 pontos; precis\~ao, revoca\c{c}\~ao e F1 completam o conjunto.
+
+Como a pseudo-caixa \'e sint\'etica, adotou-se ainda um crit\'erio independente da
+sua geometria: uma detec\c{c}\~ao \'e correta se o centro da predi\c{c}\~ao estiver a
+at\'e $R$ pixels do ponto nuclear anotado, com associa\c{c}\~ao gulosa \'unica por
+menor dist\^ancia. O limiar de confian\c{c}a foi escolhido, em cada
+configura\c{c}\~ao, pelo maior F1 na valida\c{c}\~ao em IoU 0,50. Na fase RQ2/RQ3,
+os tr\^es modelos comparados atingiram pico em 0,35; o valor do YOLO11s foi usado
+na abertura do teste.
+
+Para cada imagem $j$, com contagem anotada $g_j$ e predita $p_j$, foram
+calculados
+
+\begin{equation}
+\mathrm{MAE}=\frac{1}{N}\sum_j|p_j-g_j|,\qquad
+\mathrm{bias}=\frac{1}{N}\sum_j(p_j-g_j).
+\end{equation}
+
+RMSE e correla\c{c}\~ao complementaram a an\'alise. Intervalos de 95\% foram
+obtidos com 1.000 r\'eplicas de bootstrap sobre imagens completas, preservando a
+depend\^encia entre c\'elulas do mesmo campo. Nenhuma m\'etrica de teste foi usada
+para alterar pesos, lado da caixa ou limiar.
+
+\subsection{Rastreabilidade}
+
+Cada etapa produziu artefatos persistentes: listas de imagens por parti\c{c}\~ao,
+metadados das pseudo-caixas, configura\c{c}\~oes de treino, hist\'oricos por
+\'epoca, pesos selecionados, predi\c{c}\~oes por imagem e tabelas de m\'etricas.
+Figuras e valores reportados derivam desses arquivos, sem transcri\c{c}\~ao
+manual. As decis\~oes foram encadeadas de modo unilateral: RQ1 definiu a regi\~ao
+de pseudo-caixas; RQ2 comparou capacidades com o mesmo alvo; a valida\c{c}\~ao
+selecionou confian\c{c}a; e somente ent\~ao o teste foi avaliado. O sweep \'e
+tratado como an\'alise explorat\'oria, pois uma execu\c{c}\~ao por configura\c{c}\~ao
+n\~ao separa totalmente efeito do alvo e varia\c{c}\~ao de treino.

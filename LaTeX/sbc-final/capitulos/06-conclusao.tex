@@ -1,46 +1,38 @@
 \FloatBarrier
 \section{Conclus\~ao}
 
-Este estudo tratou a convers\~ao de pontos nucleares em caixas como vari\'avel
-cient\'ifica. Para a RQ1, observou-se um plat\^o de F1 entre 96 e 192 pixels, com
-compromissos distintos de AP50, revoca\c{c}\~ao e contagem. Para a RQ2, YOLO11s
-foi o melhor ponto operacional, embora a vantagem sobre YOLO11n tenha sido
-pequena e YOLO11m tenha apresentado maior revoca\c{c}\~ao \`a custa de falsos
-positivos. Para a RQ3, o modelo selecionado obteve AP50 0,8723, F1 0,8190 e MAE
-4,68 no teste retido; a avalia\c{c}\~ao por dist\^ancia ao ponto produziu F1
-equivalente, refor\c{c}ando que o detector localiza os n\'ucleos anotados e n\~ao
-apenas se ajusta \`a conven\c{c}\~ao da pseudo-caixa.
+Este estudo avaliou a detec\c{c}\~ao e contagem de c\'elulas cervicais a partir de
+anota\c{c}\~oes pontuais, tratando a convers\~ao de ponto em caixa como uma decis\~ao
+metodol\'ogica expl\'icita. O sweep explorat\'orio mostrou que tamanhos entre 96 e
+192 pixels formam uma regi\~ao de desempenho pr\'oximo, mas com compromissos
+distintos de AP50, F1 e MAE de contagem.
+O lado de 144 pixels foi selecionado como ponto operacional intermedi\'ario e
+levado ao protocolo final.
 
-A conclus\~ao principal n\~ao \'e que 144 pixels ou YOLO11s sejam universais. O
-resultado relevante \'e que a defini\c{c}\~ao espacial criada a partir de pontos
-altera de forma mensur\'avel detec\c{c}\~ao e contagem e, portanto, precisa fazer
-parte do protocolo reportado. Em termos pr\'aticos, o detector de classe \'unica
-pode funcionar como etapa anterior a um classificador celular ou a uma revis\~ao
-assistida, desde que falsos positivos e duplicidades sejam analisados. O
-trabalho n\~ao reivindica caixas anat\^omicas nem uso diagn\'ostico; sua
-contribui\c{c}\~ao \'e metodol\'ogica, ao trazer para a citologia cervical a
-pergunta de como a regi\~ao derivada de pontos influencia localiza\c{c}\~ao,
-calibra\c{c}\~ao e contagem.
+Na valida\c{c}\~ao cruzada 5-fold, com testes externos por imagem e limiar
+selecionado apenas na valida\c{c}\~ao interna de cada fold, o YOLO11s obteve
+F1=0,7969$\pm$0,0267, AP50=0,8569$\pm$0,0256 e MAE=5,85$\pm$1,09 c\'elulas por
+imagem. Esses valores resumem o desempenho final do
+protocolo, estimado sobre todos os testes externos da valida\c{c}\~ao cruzada.
 
-A evid\^encia mais importante para uso pr\'atico \'e que localiza\c{c}\~ao e
-contagem se comportam de forma relacionada, mas n\~ao equivalente. O caso com
-erro absoluto zero no teste ainda apresentou falsos positivos e falsos
-negativos, enquanto o caso de supercontagem recuperou todos os pontos anotados,
-mas introduziu detec\c{c}\~oes excedentes. Assim, um protocolo para citologia
-cervical com pontos deve reportar, no m\'inimo, tamanho da pseudo-caixa, limiar
-de confian\c{c}a, F1 por IoU, F1 por dist\^ancia ao ponto, erro de contagem e
-exemplos qualitativos de acertos e falhas. Essa combina\c{c}\~ao evita que o
-resultado seja reduzido a uma \'unica m\'etrica ou \`a escolha de uma caixa.
+A conclus\~ao principal n\~ao \'e que 144 pixels sejam universais. O resultado
+relevante \'e que a geometria derivada de pontos altera a localiza\c{c}\~ao e a
+contagem, devendo ser escolhida, reportada e validada. Em termos pr\'aticos, o
+detector de classe \'unica pode funcionar como etapa anterior a um classificador
+celular ou a uma revis\~ao assistida, desde que falsos positivos, duplicidades e
+tend\^encia de supercontagem sejam considerados.
 
-Como limita\c{c}\~oes, as m\'etricas de IoU descrevem consist\^encia com um alvo
-sint\'etico, cada configura\c{c}\~ao foi treinada uma vez, a avalia\c{c}\~ao usou uma
-\'unica base e a separa\c{c}\~ao foi por imagem, n\~ao por paciente. Al\'em disso,
-os intervalos de bootstrap quantificam varia\c{c}\~ao entre imagens, mas n\~ao a
-incerteza de treinamento; diferen\c{c}as pequenas no plat\^o de F1 n\~ao devem ser
-generalizadas sem repeti\c{c}\~oes. Trabalhos futuros devem repetir o sweep com
-m\'ultiplas sementes, comparar pseudo-caixas a formula\c{c}\~oes que aprendem
-extens\~ao a partir dos pontos \cite{chen2023p2bnet} e anotar uma amostra com
-contornos manuais para calibrar a avalia\c{c}\~ao atual.
+Como limita\c{c}\~oes, as m\'etricas baseadas em IoU descrevem consist\^encia com
+pseudo-caixas, n\~ao com fronteiras anat\^omicas; a base n\~ao fornece
+identificador de paciente, restringindo a independ\^encia ao n\'ivel de imagem; e
+o sweep de tamanho foi explorat\'orio, com uma execu\c{c}\~ao por configura\c{c}\~ao.
+Trabalhos futuros devem comparar pseudo-caixas a m\'etodos que aprendem
+extens\~ao a partir de pontos \cite{chen2023p2bnet}, repetir a escolha do tamanho
+com m\'ultiplas sementes e anotar uma amostra com contornos manuais para calibrar
+a interpreta\c{c}\~ao espacial.
 
-Os artefatos de reprodu\c{c}\~ao est\~ao no reposit\'orio p\'ublico
-\cite{sousa2026repositorio}.
+O reposit\'orio p\'ublico do projeto\footnote{\url{https://github.com/JeanCarlos899/Pesquisa-Jean}}
+re\'une o c\'odigo da pipeline, arquivos de configura\c{c}\~ao, CSVs usados na
+gera\c{c}\~ao das tabelas e figuras, al\'em dos resultados da valida\c{c}\~ao cruzada.
+Essa organiza\c{c}\~ao permite auditar os valores reportados e reproduzir as
+principais etapas experimentais descritas no artigo.

@@ -1,0 +1,27 @@
+\FloatBarrier
+\section{Trabalhos relacionados}
+
+M\'ascaras de inst\^ancia permitem avaliar fronteiras e separar objetos
+adjacentes, mas exigem um ground truth ausente na CRIC. Pontos reduzem custo de
+anota\c{c}\~ao e identificam inst\^ancias sem descrever sua extens\~ao
+\cite{chen2021sparsepoints,xia2023colorization,chen2023p2bnet}. Em imagens
+biom\'edicas, Chen et al. propuseram segmenta\c{c}\~ao histopatol\'ogica fracamente
+supervisionada com pontos esparsos \cite{chen2021sparsepoints}, enquanto Xia et
+al. exploraram pontos e coloriza\c{c}\~ao para segmenta\c{c}\~ao nuclear
+\cite{xia2023colorization}. Na detec\c{c}\~ao de objetos, o P2BNet aprende a
+extens\~ao a partir de anota\c{c}\~oes pontuais \cite{chen2023p2bnet}. Essa frente
+fornece a ancoragem metodol\'ogica mais pr\'oxima deste artigo: o ponto \'e tratado
+como supervis\~ao espacial incompleta, e a regi\~ao usada pelo detector passa a ser
+uma escolha experimental.
+
+Em citologia cervical, revis\~oes recentes destacam resultados elevados em
+classifica\c{c}\~ao, mas tamb\'em grande heterogeneidade de bases, classes,
+prepara\c{c}\~ao e protocolos de avalia\c{c}\~ao \cite{jiang2023systematic}. O
+CerviCell-detector avaliou detectores de objetos em imagens de Papanicolau,
+incluindo experimentos na CRIC, com formula\c{c}\~oes bin\'aria e Bethesda
+\cite{kalbhor2023cervicell}. O presente estudo se aproxima dele pelo dom\'inio e
+pela base de dados, mas remove a decis\~ao diagn\'ostica do alvo e pergunta se
+todas as inst\^ancias pontuais podem ser localizadas e contadas. Assim, sua
+contribui\c{c}\~ao compar\'avel \`a literatura n\~ao \'e superar numericamente
+modelos de segmenta\c{c}\~ao ou classifica\c{c}\~ao, mas quantificar o efeito de
+transformar um ponto em uma regi\~ao de treinamento para detectores de caixas.

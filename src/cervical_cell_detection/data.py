@@ -89,25 +89,40 @@ def add_image_sizes(annotations: pd.DataFrame) -> pd.DataFrame:
     return table
 
 
-def balanced_image_split(config: Config, annotations: pd.DataFrame) -> dict[str, set[str]]:
-    if abs(config.train_frac + config.val_frac + config.test_frac - 1.0) > 1e-6:
-        raise ValueError("train_frac + val_frac + test_frac must equal 1.0")
+def balanced_image_folds(config: Config, annotations: pd.DataFrame, n_splits: int) -> pd.DataFrame:
+    if n_splits < 2:
+        raise ValueError("n_splits must be at least 2")
+    counts = annotations.groupby("image_path").size().rename("objects").reset_index()
+    if n_splits > len(counts):
+        raise ValueError(f"n_splits={n_splits} is larger than the number of images ({len(counts)})")
+    counts = counts.sample(frac=1.0, random_state=config.seed).sort_values("objects", ascending=False).reset_index(drop=True)
+    folds: list[list[str]] = [[] for _ in range(n_splits)]
+    object_sum = [0 for _ in range(n_splits)]
+    for row in counts.itertuples(index=False):
+        chosen = min(range(n_splits), key=lambda idx: (object_sum[idx], len(folds[idx])))
+        folds[chosen].append(row.image_path)
+        object_sum[chosen] += int(row.objects)
+    rows = []
+    for idx, paths in enumerate(folds, start=1):
+        for path in paths:
+            rows.append({"caminho_imagem": path, "fold": idx})
+    return pd.DataFrame(rows)
+
+
+def balanced_inner_split(config: Config, annotations: pd.DataFrame, val_frac: float = 0.125) -> dict[str, set[str]]:
     counts = annotations.groupby("image_path").size().rename("objects").reset_index()
     counts = counts.sample(frac=1.0, random_state=config.seed).sort_values("objects", ascending=False).reset_index(drop=True)
     n_images = len(counts)
-    targets_n = {
-        "train": int(round(n_images * config.train_frac)),
-        "val": int(round(n_images * config.val_frac)),
-    }
-    targets_n["test"] = n_images - targets_n["train"] - targets_n["val"]
+    val_target = max(1, int(round(n_images * val_frac)))
+    train_target = n_images - val_target
     total_objects = float(counts["objects"].sum())
     targets_objects = {
-        "train": total_objects * config.train_frac,
-        "val": total_objects * config.val_frac,
-        "test": total_objects * config.test_frac,
+        "train": total_objects * (train_target / n_images),
+        "val": total_objects * (val_target / n_images),
     }
-    buckets: dict[str, list[str]] = {"train": [], "val": [], "test": []}
-    object_sum = {"train": 0, "val": 0, "test": 0}
+    buckets: dict[str, list[str]] = {"train": [], "val": []}
+    object_sum = {"train": 0, "val": 0}
+    targets_n = {"train": train_target, "val": val_target}
     for row in counts.itertuples(index=False):
         candidates = [split for split in buckets if len(buckets[split]) < targets_n[split]]
         chosen = min(candidates, key=lambda split: (object_sum[split] + row.objects) / max(targets_objects[split], 1.0))
@@ -155,12 +170,14 @@ def to_yolo_line(row) -> str:
     return f"0 {xc:.6f} {yc:.6f} {bw:.6f} {bh:.6f}"
 
 
-def prepare_dataset(config: Config, force: bool = False) -> pd.DataFrame:
+def prepare_kfold_dataset(config: Config, fold: int, n_splits: int, force: bool = False) -> pd.DataFrame:
     ensure_dirs(config)
-    if config.metadata_csv.exists() and config.data_yaml.exists() and not force:
-        print(f"Using existing prepared dataset: {config.metadata_csv}")
+    if config.metadata_csv.exists() and config.data_yaml.exists() and "test:" in config.data_yaml.read_text(encoding="utf-8") and not force:
+        print(f"Using existing prepared k-fold dataset: {config.metadata_csv}")
         return pd.read_csv(config.metadata_csv)
 
+    if fold < 1 or fold > n_splits:
+        raise ValueError(f"fold must be between 1 and {n_splits}, got {fold}")
     if config.yolo_dir.exists():
         shutil.rmtree(config.yolo_dir)
     for split in ["train", "val", "test"]:
@@ -170,11 +187,18 @@ def prepare_dataset(config: Config, force: bool = False) -> pd.DataFrame:
     annotations = load_raw_annotations(config)
     annotations = resolve_image_paths(config, annotations)
     annotations = add_image_sizes(annotations)
-    split_sets = balanced_image_split(config, annotations)
-    split_lookup = {path: split for split, paths in split_sets.items() for path in paths}
-    annotations["split"] = annotations["image_path"].map(split_lookup)
-    if annotations["split"].isna().any():
-        raise RuntimeError("Some annotations did not receive a split")
+    fold_map = balanced_image_folds(config, annotations, n_splits)
+    fold_lookup = fold_map.set_index("caminho_imagem")["fold"].to_dict()
+    annotations["fold"] = annotations["image_path"].map(fold_lookup)
+    if annotations["fold"].isna().any():
+        raise RuntimeError("Some annotations did not receive a fold")
+    annotations["split"] = np.where(annotations["fold"].eq(fold), "test", "")
+    inner = balanced_inner_split(config, annotations[annotations["fold"].ne(fold)])
+    for split, paths in inner.items():
+        annotations.loc[annotations["image_path"].isin(paths), "split"] = split
+    if annotations["split"].eq("").any():
+        raise RuntimeError("Some annotations did not receive an inner train/val split")
+    split_lookup = annotations.drop_duplicates("image_path").set_index("image_path")["split"].to_dict()
     annotations = add_boxes(config, annotations)
     annotations = annotations.rename(
         columns={
@@ -197,7 +221,7 @@ def prepare_dataset(config: Config, force: bool = False) -> pd.DataFrame:
     for row in annotations.itertuples(index=False):
         label_lines[(row.caminho_imagem, row.particao)].append(to_yolo_line(row))
 
-    for image_path in tqdm(sorted(annotations["caminho_imagem"].unique()), desc="Writing YOLO dataset"):
+    for image_path in tqdm(sorted(annotations["caminho_imagem"].unique()), desc=f"Writing YOLO fold {fold}/{n_splits}"):
         split = split_lookup[image_path]
         source = Path(image_path)
         shutil.copy2(source, config.yolo_dir / "images" / split / source.name)
@@ -223,6 +247,7 @@ def prepare_dataset(config: Config, force: bool = False) -> pd.DataFrame:
     )
     config.data_yaml.write_text(data_yaml, encoding="utf-8")
     annotations.to_csv(config.metadata_csv, index=False)
+    fold_map.to_csv(config.metrics_dir / "fold_assignment.csv", index=False)
     write_dataset_summaries(config, annotations)
     draw_annotation_audit(config, annotations)
     print(pd.read_csv(config.split_summary_csv).to_string(index=False))
@@ -230,15 +255,16 @@ def prepare_dataset(config: Config, force: bool = False) -> pd.DataFrame:
 
 
 def write_dataset_summaries(config: Config, metadata: pd.DataFrame) -> None:
+    splits = [split for split in ["train", "val", "test"] if split in set(metadata["particao"])]
     summary = (
         metadata.groupby("particao")
         .agg(imagens=("caminho_imagem", "nunique"), celulas=("id_celula", "count"))
-        .reindex(["train", "val", "test"])
+        .reindex(splits)
         .reset_index()
     )
     summary["celulas_por_imagem_media"] = (
         metadata.groupby("particao").size() / metadata.groupby("particao")["caminho_imagem"].nunique()
-    ).reindex(["train", "val", "test"]).round(2).to_numpy()
+    ).reindex(splits).round(2).to_numpy()
     summary.to_csv(config.split_summary_csv, index=False)
 
     composition = (
@@ -284,5 +310,5 @@ def draw_annotation_audit(config: Config, metadata: pd.DataFrame, samples_per_sp
 
 def load_metadata(config: Config) -> pd.DataFrame:
     if not config.metadata_csv.exists():
-        return prepare_dataset(config)
+        raise FileNotFoundError(f"Prepared metadata not found for this fold: {config.metadata_csv}")
     return pd.read_csv(config.metadata_csv)

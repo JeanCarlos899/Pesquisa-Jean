@@ -8,7 +8,7 @@ anota\c{c}\~ao e identificam inst\^ancias sem descrever sua extens\~ao
 biom\'edicas, Chen et al. propuseram segmenta\c{c}\~ao histopatol\'ogica fracamente
 supervisionada com pontos esparsos \cite{chen2021sparsepoints}, enquanto Xia et
 al. exploraram pontos e coloriza\c{c}\~ao para segmenta\c{c}\~ao nuclear
-\cite{xia2023colorization}. Na detec\c{c}\~ao de objetos, o P2BNet aprende a
+\cite{xia2023colorization}. Na detec\c{c}\~ao de objetos, a rede Point-to-Box aprende a
 extens\~ao a partir de anota\c{c}\~oes pontuais \cite{chen2023p2bnet}. Essa frente
 fornece a ancoragem metodol\'ogica mais pr\'oxima deste artigo: o ponto \'e tratado
 como supervis\~ao espacial incompleta, e a regi\~ao usada pelo detector passa a ser
@@ -25,3 +25,12 @@ todas as inst\^ancias pontuais podem ser localizadas e contadas. Assim, sua
 contribui\c{c}\~ao compar\'avel \`a literatura n\~ao \'e superar numericamente
 modelos de segmenta\c{c}\~ao ou classifica\c{c}\~ao, mas quantificar o efeito de
 transformar um ponto em uma regi\~ao de treinamento para detectores de caixas.
+
+Essa diferen\c{c}a tamb\'em orienta a compara\c{c}\~ao experimental. Trabalhos que
+classificam c\'elulas ou les\~oes respondem a uma pergunta cl\'inica distinta,
+enquanto m\'etodos de segmenta\c{c}\~ao dependem de contornos que n\~ao est\~ao
+dispon\'iveis nas anota\c{c}\~oes usadas aqui. Por isso, este artigo evita uma
+hierarquia num\'erica direta com resultados externos e privilegia a
+reprodutibilidade do protocolo: origem dos dados, transforma\c{c}\~ao dos pontos,
+crit\'erio de escolha da pseudo-caixa, particionamento por imagem e avalia\c{c}\~ao
+cruzada final s\~ao descritos de forma expl\'icita.

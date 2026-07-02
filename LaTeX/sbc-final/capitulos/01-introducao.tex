@@ -20,27 +20,19 @@ decis\~ao tamb\'em afeta sobreposi\c{c}\~ao entre alvos, localiza\c{c}\~ao e con
 A CRIC Cervix disponibiliza 400 imagens convencionais de Papanicolau e 11.534
 c\'elulas classificadas, cada uma associada a uma coordenada nuclear
 \cite{rezende2021cric}. A base permite estudar detec\c{c}\~ao sem recortar
-previamente as c\'elulas, mas n\~ao fornece bounding boxes anat\^omicas. Trabalhos
-anteriores usaram a CRIC em detec\c{c}\~ao e classifica\c{c}\~ao
-\cite{kalbhor2023cervicell}; ainda assim, a sensibilidade do resultado \`a
-geometria criada a partir dos pontos permanece pouco explorada.
+previamente as c\'elulas, mas n\~ao fornece bounding boxes anat\^omicas. Assim, o
+uso de detectores de objetos exige uma regra expl\'icita para converter cada
+ponto em alvo de treinamento.
 
 Este artigo formula o problema como detec\c{c}\~ao e contagem supervisionadas por
 pontos. N\~ao se prop\~oe uma nova arquitetura nem se usa a categoria Bethesda
 como sa\'ida: todas as coordenadas s\~ao tratadas como inst\^ancias de uma classe
-\'unica. O objetivo \'e determinar em que medida um detector treinado com
-pseudo-caixas recupera os pontos anotados, preserva a contagem por campo e quais
-erros aparecem quando essa sa\'ida \'e vista como etapa anterior a classifica\c{c}\~ao
-ou revis\~ao assistida.
+\'unica. O objetivo \'e avaliar se pseudo-caixas centradas nos pontos nucleares
+permitem recuperar as inst\^ancias anotadas e preservar a contagem por imagem.
 
-Tr\^es perguntas orientam o experimento. \textbf{RQ1:} quanto o tamanho da
-pseudo-caixa modifica F1, AP50 e erro de contagem? \textbf{RQ2:} aumentar a
-escala de YOLO11n para YOLO11s ou YOLO11m melhora o compromisso entre
-localiza\c{c}\~ao e contagem? \textbf{RQ3:} a configura\c{c}\~ao selecionada na
-valida\c{c}\~ao mant\'em desempenho no conjunto de teste retido? A principal
-contribui\c{c}\~ao \'e tornar mensur\'avel uma decis\~ao normalmente escondida na
-prepara\c{c}\~ao dos dados, com parti\c{c}\~oes por imagem, limiar escolhido sem
-acesso ao teste e intervalos de confian\c{c}a por bootstrap sobre imagens
-completas. Essa formula\c{c}\~ao desloca o foco de uma escolha isolada de
-hiperpar\^ametro para a validade do fluxo ponto--detec\c{c}\~ao--contagem em
-citologia cervical.
+Duas perguntas orientam o experimento. \textbf{RQ1:} como o tamanho da
+pseudo-caixa afeta F1, AP50 e MAE de contagem, e qual tamanho deve ser levado ao
+protocolo final? \textbf{RQ2:} com o tamanho selecionado, qual desempenho \'e
+obtido em valida\c{c}\~ao cruzada 5-fold por imagem? A contribui\c{c}\~ao principal \'e separar a etapa
+explorat\'oria de escolha do alvo da valida\c{c}\~ao final, tornando audit\'avel uma
+decis\~ao que costuma ficar escondida na prepara\c{c}\~ao dos dados.

@@ -2,9 +2,30 @@
 
 ## Objetivo
 
-Detectar todas as celulas nas 400 imagens da CRIC Cervix, ignorando a
-classificacao Bethesda durante o treino. Cada celula vira uma instancia da
-classe unica `cell`.
+Detectar todas as celulas nas 400 imagens da CRIC Cervix usando anotacoes
+pontuais como supervisao espacial. Cada ponto nuclear e convertido em uma
+pseudo-caixa quadrada de 144 px e a tarefa e tratada como deteccao de classe
+unica (`cell`).
+
+## Desenho experimental
+
+O protocolo atual usa validacao cruzada 5-fold por imagem. Todas as 400 imagens
+entram no particionamento. Em cada fold:
+
+- 80 imagens formam o teste externo;
+- as 320 imagens restantes sao repartidas em 280 de treino e 40 de validacao
+  interna;
+- a validacao interna e usada para early stopping, escolha de `best.pt` e escolha
+  do limiar operacional por maior F1 em IoU 0,50;
+- o teste externo e avaliado uma unica vez com o checkpoint e o limiar escolhidos
+  na validacao interna;
+- nenhuma imagem aparece simultaneamente em treino, validacao interna e teste
+  externo.
+
+Os folds sao balanceados de forma gulosa pela quantidade de celulas por imagem,
+reduzindo diferencas de carga celular entre os testes externos. Como a CRIC nao
+fornece identificador de paciente, a independencia e controlada no nivel de
+imagem, que e o maior controle suportado pelos metadados disponiveis.
 
 ## Dados
 
@@ -14,14 +35,7 @@ A base nao e versionada no Git. Para reconstruir a pasta local:
 .\run.ps1 download-data
 ```
 
-O comando usa:
-
-- Colecao Figshare CRIC Cervix Cell Classification:
-  <https://doi.org/10.6084/m9.figshare.c.4960286.v2>
-- Item de classificacao:
-  <https://doi.org/10.6084/m9.figshare.12233156.v2>
-
-Estrutura esperada apos o download:
+Estrutura esperada:
 
 ```text
 cric_cervix/
@@ -35,23 +49,7 @@ cric_cervix/
     cric_image_400_*.png
 ```
 
-## Por que testar tamanhos de bbox?
-
-O CRIC Cervix fornece coordenadas nucleares, nao caixas delimitadoras. Logo, a
-caixa usada no treino e um alvo derivado. Um unico tamanho fixo pode ser pequeno
-demais para algumas celulas ou grande demais em imagens densas. Por isso, a
-pipeline inclui uma ablacao:
-
-```powershell
-.\run.ps1 bbox-sweep
-```
-
-Ela treina uma versao leve para cada tamanho em `box_size_candidates` e compara
-F1, precisao, revocacao, AP50 e erro medio de contagem na validacao. A
-configuracao principal usa `box_size_px = 144`, escolhida como compromisso
-operacional no experimento.
-
-## Etapas
+## Execucao
 
 Criar ambiente:
 
@@ -59,83 +57,70 @@ Criar ambiente:
 .\setup.ps1
 ```
 
-Baixar dados:
-
-```powershell
-.\run.ps1 download-data
-```
-
-Verificar ambiente:
+Verificar GPU e dependencias:
 
 ```powershell
 .\run.ps1 check
 ```
 
-Preparar dataset YOLO:
+Conferir as particoes sem treinar:
 
 ```powershell
-.\run.ps1 prepare -Force
+.\run.ps1 kfold -DryRun
 ```
 
-Rodar ablacao de bbox:
+Rodar o protocolo principal:
 
 ```powershell
-.\run.ps1 bbox-sweep
+.\run.ps1 kfold
 ```
 
-Treinar detector principal:
+Opcao mais curta para reduzir tempo de relogio:
 
 ```powershell
-.\run.ps1 train
+.\run.ps1 kfold -Epochs 45 -Patience 10
 ```
 
-Avaliar validacao e teste:
+## Artefatos atuais
 
-```powershell
-.\run.ps1 eval-val
-.\run.ps1 eval-test
+Resultados leves para o artigo:
+
+```text
+results/kfold_box144_yolo11s/
+  kfold_folds.csv
+  kfold_resumo.csv
+  kfold_folds.md
+  kfold_resumo.md
 ```
 
-Comparar YOLO11s/YOLO11m contra a configuracao principal:
+Artefatos pesados por fold:
 
-```powershell
-.\run.ps1 model-s
-.\run.ps1 model-m
+```text
+outputs_detection/kfold/yolo11s_box144/fold_01/
+...
+outputs_detection/kfold/yolo11s_box144/fold_05/
 ```
 
-Ou, em uma chamada:
+Cada pasta de fold contem:
 
-```powershell
-.\run.ps1 model-compare -Models s,m
+- `yolo_dataset/`: imagens e labels repartidos em `train`, `val` e `test`;
+- `runs/`: historico de treino Ultralytics;
+- `checkpoints/best_cell_detector.pt`: melhor checkpoint do fold;
+- `predicoes_val.csv` e `predicoes_test.csv`;
+- `metrics/avaliacao_val_limiares.csv`: grade de limiares da validacao interna;
+- `metrics/limiar_operacional.json`: limiar selecionado na validacao interna;
+- `metrics/avaliacao_test_limiares.csv`: grade do teste externo para auditoria;
+- `metrics/contagem_por_imagem_test_fold.csv`: contagem por imagem no teste
+  externo usando o limiar selecionado.
+
+## Legado
+
+As rodadas antigas com split fixo e comparacao de modelos foram movidas para:
+
+```text
+legacy/fixed_split/
+outputs_detection/legacy_fixed_split/
 ```
 
-Avaliacao de teste e materiais do artigo final com o YOLO11s:
-
-```powershell
-.\run.ps1 model-s -Test
-.\run.ps1 materials-s
-```
-
-## Artefatos principais
-
-- `outputs_detection/metadata_cells_detection.csv`: anotacoes padronizadas.
-- `outputs_detection/yolo_dataset/`: dataset YOLO de classe unica.
-- `outputs_detection/checkpoints/best_cell_detector.pt`: melhor detector.
-- `outputs_detection/metrics/avaliacao_val_limiares.csv`: grade de limiares na
-  validacao.
-- `outputs_detection/metrics/avaliacao_test_limiares.csv`: grade de limiares no
-  teste.
-- `outputs_detection/metrics/map_test.csv`: AP por IoU.
-- `outputs_detection/metrics/contagem_por_imagem_teste.csv`: erro de contagem
-  por imagem.
-- `outputs_detection/metrics/intervalos_confianca_bootstrap.csv`: IC95 por
-  reamostragem de imagens.
-- `outputs_detection/metrics/bbox_sweep_summary.csv`: comparacao dos tamanhos
-  de pseudo-bbox.
-
-## Observacao metodologica
-
-As metricas de deteccao sao calculadas contra pseudo-bounding boxes centradas
-nos pontos nucleares. Isso deve ser descrito como limitacao e como escolha
-metodologica validada por ablacao, nao como ground truth manual de segmentacao
-ou contorno celular.
+Elas ficam preservadas como historico, mas nao fazem parte do protocolo
+confirmatorio atual.

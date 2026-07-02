@@ -11,18 +11,10 @@ class Config:
     data_dir: Path
     output_dir: Path
     expected_gpu: str
-    train_frac: float
-    val_frac: float
-    test_frac: float
     box_size_px: int
-    box_size_candidates: list[int]
     min_box_size_px: int
     epochs: int
-    model_compare_epochs: int
-    ablation_epochs: int
     patience: int
-    model_compare_patience: int
-    ablation_patience: int
     workers: int
     max_det: int
     predict_conf: float
@@ -31,8 +23,11 @@ class Config:
     iou_thresholds: list[float]
     bootstrap_replicates: int
     train_attempts: list[dict]
-    ablation_train_attempts: list[dict]
-    model_compare_attempts: dict[str, list[dict]]
+    kfold_splits: int = 5
+    kfold_epochs: int = 55
+    kfold_patience: int = 12
+    kfold_model: str = "s"
+    kfold_train_attempts: list[dict] | None = None
 
     @property
     def images_dir(self) -> Path:

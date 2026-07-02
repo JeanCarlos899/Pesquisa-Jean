@@ -7,7 +7,6 @@
 \usepackage[brazilian]{babel}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{multirow}
 \IfFileExists{placeins.sty}{\usepackage{placeins}}{\newcommand{\FloatBarrier}{}}
 \usepackage{tikz}
 \usepackage{pgfplots}
@@ -15,7 +14,6 @@
 \IfFileExists{microtype.sty}{\usepackage{microtype}}{}
 \pgfplotsset{compat=1.18}
 \usepgfplotslibrary{groupplots}
-\usetikzlibrary{positioning,arrows.meta}
 
 \graphicspath{{figuras/}}
 \urlstyle{same}
@@ -37,18 +35,19 @@ Universidade Federal do Piau\'i (UFPI) -- Picos, PI -- Brasil
 \begin{resumo}
 Anota\c{c}\~oes pontuais identificam centros celulares, mas n\~ao definem a
 extens\~ao do objeto. Este trabalho avalia um fluxo de detec\c{c}\~ao e contagem
-de c\'elulas cervicais na CRIC Cervix a partir desses pontos, investigando dez
-tamanhos de pseudo-caixa (48--192 pixels) e tr\^es escalas YOLO11, com
-parti\c{c}\~oes separadas por imagem. O F1 de valida\c{c}\~ao forma um plat\^o
-entre 96 e 192 pixels, com compromissos distintos de precis\~ao, revoca\c{c}\~ao e
-contagem; o alvo de 144 pixels foi mantido como ponto operacional intermedi\'ario
-e o YOLO11s deu o melhor equil\'ibrio. No teste retido, alcan\c{c}ou AP50=0,8723,
-F1=0,8190 e erro absoluto m\'edio de 4,68 c\'elulas por imagem. Um crit\'erio de
-dist\^ancia ao ponto, independente da caixa sint\'etica, produz F1 equivalente,
-confirmando localiza\c{c}\~ao real dos n\'ucleos. A contribui\c{c}\~ao \'e uma
-an\'alise audit\'avel de como a constru\c{c}\~ao do alvo afeta localiza\c{c}\~ao,
-calibra\c{c}\~ao e contagem, sem reivindicar caixas anat\^omicas ou uso
-diagn\'ostico.
+de c\'elulas cervicais na CRIC Cervix a partir desses pontos. Primeiro, um sweep
+explorat\'orio de pseudo-caixas entre 48 e 192 pixels indicou 144 pixels como
+ponto operacional intermedi\'ario. Em seguida, essa escolha foi avaliada com
+YOLO11s em valida\c{c}\~ao cruzada 5-fold no n\'ivel de imagem: em cada fold, 80
+imagens foram mantidas como teste externo e as demais foram divididas em treino
+e valida\c{c}\~ao interna para selecionar checkpoint e limiar operacional. Em
+m\'edia, o protocolo obteve F1=0,7969$\pm$0,0267, AP50=0,8569$\pm$0,0256 e
+MAE=5,85$\pm$1,09 c\'elulas por imagem nos testes externos. Os
+resultados indicam que pontos nucleares podem orientar localiza\c{c}\~ao e
+contagem com desempenho consistente, desde que a geometria da pseudo-caixa e o
+protocolo de valida\c{c}\~ao sejam explicitamente reportados. O estudo n\~ao
+reivindica caixas anat\^omicas nem uso diagn\'ostico; sua contribui\c{c}\~ao \'e
+metodol\'ogica e reprodut\'ivel.
 \end{resumo}
 
 \input{capitulos/01-introducao}
@@ -57,6 +56,7 @@ diagn\'ostico.
 \input{capitulos/04-resultados}
 \input{capitulos/06-conclusao}
 
+\newpage
 \bibliographystyle{sbc}
 \bibliography{sbc-template}
 
