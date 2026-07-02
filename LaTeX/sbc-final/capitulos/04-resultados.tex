@@ -6,7 +6,7 @@
 A Figura~\ref{fig:sweep-pgf} resume a etapa explorat\'oria usada para definir a
 pseudo-caixa. O efeito do tamanho foi n\~ao monot\^onico: F1 e AP50
 aumentaram das menores caixas at\'e uma regi\~ao de estabilidade entre 96 e 192
-pixels, mas o tamanho 160 apresentou supercontagem e queda acentuada de F1. O
+pixels, com exce\c{c}\~ao de 160, que apresentou supercontagem e queda acentuada de F1. O
 maior F1 observado foi 0,8253 em 192 pixels; o maior AP50 foi 0,8776 em 176
 pixels. Em 144 pixels, F1 foi 0,8228, AP50 foi 0,8748 e MAE de contagem foi
 4,40.
@@ -116,13 +116,10 @@ varia\c{c}\~ao do protocolo aparece: o fold 1 concentra menor precision, menor A
 e maior MAE, enquanto os folds 4 e 5 mant\^em F1 acima de 0,81 e MAE pr\'oximo de
 cinco c\'elulas por imagem.
 
-\newpage
-
-\begin{center}
-\begin{minipage}{.86\textwidth}
-\captionof{table}{Resultados por fold da valida\c{c}\~ao cruzada 5-fold.}
-\label{tab:kfold-folds}
+\begin{table}[htbp]
 \centering
+\caption{Resultados por fold da valida\c{c}\~ao cruzada 5-fold.}
+\label{tab:kfold-folds}
 \small
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{cccccc}
@@ -136,8 +133,7 @@ Fold & Limiar & F1 & AP50 & MAE & Bias \\
 5 & 0,50 & 0,8106 & 0,8670 & 4,95 & 1,98 \\
 \bottomrule
 \end{tabular}
-\end{minipage}
-\end{center}
+\end{table}
 
 Agregando as contagens dos cinco testes externos, o protocolo produziu 9.571
 verdadeiros positivos, 2.928 falsos positivos e 1.963 falsos negativos em

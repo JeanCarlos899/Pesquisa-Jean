@@ -63,7 +63,7 @@ maior controle suportado pelos metadados.
 
 \subsection{Treinamento e m\'etricas}
 
-O detector final foi YOLO11s inicializado com pesos pr\'e-treinados, entrada
+O detector final foi YOLO11s \cite{khanam2024yolov11} inicializado com pesos pr\'e-treinados, entrada
 nominal 832, lote 6, AdamW, taxa inicial 0,002, agendamento cossenoidal,
 precis\~ao mista e aumento geom\'etrico/crom\'atico moderado. Cada fold treinou
 por at\'e 55 \'epocas, com paci\^encia 12, em uma RTX 3060 Laptop com 6 GB de
@@ -73,7 +73,7 @@ As predi\c{c}\~oes foram exportadas pela rotina de valida\c{c}\~ao do Ultralytic
 todas as m\'etricas foram recomputadas a partir dos CSVs gerados. A
 associa\c{c}\~ao entre predi\c{c}\~ao e alvo priorizou maior IoU e
 imp\^os unicidade de ambos os lados. Foram reportados precision, recall, F1 e
-AP50 para detec\c{c}\~ao, al\'em de MAE, RMSE e bias para contagem por imagem.
+AP50 \cite{lin2014coco} para detec\c{c}\~ao, al\'em de MAE, RMSE e bias para contagem por imagem.
 Para cada imagem $j$, com contagem anotada $g_j$ e predita $p_j$, calcularam-se
 
 \begin{equation}

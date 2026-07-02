@@ -3,14 +3,15 @@
 
 Este estudo avaliou a detec\c{c}\~ao e contagem de c\'elulas cervicais a partir de
 anota\c{c}\~oes pontuais, tratando a convers\~ao de ponto em caixa como uma decis\~ao
-metodol\'ogica expl\'icita. O sweep explorat\'orio mostrou que tamanhos entre 96 e
-192 pixels formam uma regi\~ao de desempenho pr\'oximo, mas com compromissos
-distintos de AP50, F1 e MAE de contagem.
+metodol\'ogica expl\'icita. Em resposta \`a RQ1, o sweep explorat\'orio mostrou que o
+tamanho da pseudo-caixa afeta F1, AP50 e MAE de forma n\~ao monot\^onica: tamanhos entre
+96 e 192 pixels, exceto 160, formam uma regi\~ao de desempenho pr\'oximo, mas com
+compromissos distintos de AP50, F1 e MAE de contagem.
 O lado de 144 pixels foi selecionado como ponto operacional intermedi\'ario e
 levado ao protocolo final.
 
-Na valida\c{c}\~ao cruzada 5-fold, com testes externos por imagem e limiar
-selecionado apenas na valida\c{c}\~ao interna de cada fold, o YOLO11s obteve
+Em resposta \`a RQ2, na valida\c{c}\~ao cruzada 5-fold, com testes externos por imagem e
+limiar selecionado apenas na valida\c{c}\~ao interna de cada fold, o YOLO11s obteve
 F1=0,7969$\pm$0,0267, AP50=0,8569$\pm$0,0256 e MAE=5,85$\pm$1,09 c\'elulas por
 imagem. Esses valores resumem o desempenho final do
 protocolo, estimado sobre todos os testes externos da valida\c{c}\~ao cruzada.
