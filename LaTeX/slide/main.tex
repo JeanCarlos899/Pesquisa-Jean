@@ -571,68 +571,6 @@ Teste & 80 & métrica final\\
 \end{frame}
 
 % 17
-\tightframe{Limitações e próximos passos}
-\begin{columns}[T,totalwidth=\textwidth]
-\column{.50\textwidth}
-{\Large\bfseries Limitações}
-\vspace{.2cm}
-\begin{itemize}
-  \item A base não fornece identificador de paciente.
-  \item O sweep foi exploratório, com uma execução por tamanho.
-  \item AP50 mede aderência à pseudo-caixa, não segmentação anatômica.
-\end{itemize}
-
-\column{.50\textwidth}
-{\Large\bfseries Trabalhos futuros}
-\vspace{.2cm}
-\begin{itemize}
-  \item Repetir o sweep com múltiplas sementes.
-  \item Comparar com métodos que aprendem extensão a partir de pontos.
-  \item Anotar uma amostra com contornos manuais para calibrar a leitura espacial.
-\end{itemize}
-\end{columns}
-\end{frame}
-
-% 18
-\tightframe{Reprodutibilidade}
-\begin{columns}[T,totalwidth=\textwidth]
-\column{.52\textwidth}
-{\Large\bfseries O que fica disponível}
-\vspace{.12cm}
-\begin{itemize}
-  \item Código da pipeline e configuração local.
-  \item CSVs do sweep e da validação cruzada.
-  \item Tabelas e figuras geradas para o artigo.
-  \item Resultados por fold e materiais de auditoria.
-\end{itemize}
-
-\vspace{.25cm}
-\begin{tikzpicture}
-  \node[draw=ufpiBlue!45,fill=white,rounded corners=6pt,text width=6.2cm,inner sep=7pt] {
-    {\bfseries Repositório público}\\[-1pt]
-    {\scriptsize\href{https://github.com/JeanCarlos899/Pesquisa-Jean}{github.com/JeanCarlos899/Pesquisa-Jean}}
-  };
-\end{tikzpicture}
-
-\column{.48\textwidth}
-\centering
-{\Large\bfseries Artigo final}
-
-\vspace{.12cm}
-\begin{tikzpicture}
-  \node[draw=lineGray,line width=.45pt,fill=white,inner sep=1.2pt] at (1.08,.34)
-    {\includegraphics[height=4.05cm,trim=1.1cm 1.2cm 1.1cm 1.2cm,clip]{article_page-8.png}};
-  \node[draw=lineGray,line width=.45pt,fill=white,inner sep=1.2pt] at (.05,-.04)
-    {\includegraphics[height=4.08cm,trim=1.1cm 1.2cm 1.1cm 1.2cm,clip]{article_page-6.png}};
-  \node[draw=ufpiBlue!45,line width=.85pt,fill=white,inner sep=2pt] at (-.96,-.43)
-    {\includegraphics[height=4.08cm,trim=.8cm .9cm .8cm .9cm,clip]{article_page-1.png}};
-  \node[fill=white,draw=ufpiBlue!30,rounded corners=5pt,text width=4.45cm,align=center,inner sep=4pt] at (.05,-2.85)
-    {\scriptsize\color{muted}Template SBC, 8 páginas, validação cruzada e referências em página própria.};
-\end{tikzpicture}
-\end{columns}
-\end{frame}
-
-% 19
 \tightframe{Referências principais e Qualis}
 \vspace{.05cm}
 \refcard{ufpiBlue}{Rezende et al. (2021) -- base CRIC Cervix}{CRIC Searchable Image Database as a Public Platform for Conventional Pap Smear Cytology Data. \textit{Scientific Data}.}{Qualis: A1 -- referência obrigatória da base de dados.}
